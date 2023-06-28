@@ -2,7 +2,7 @@
  A drawable, can be included in a display list
 ]#
 
-import pixie
+import pixie, vectors
 
 type Drawable* = ref object of RootObj
  id*: uint
@@ -10,6 +10,7 @@ type Drawable* = ref object of RootObj
  bounds*: tuple[min: Vector2, max: Vector2]
 
 proc drawAABB*(drawable: Drawable, context: Context) =
+ echo "draw ay ay bee bee"
  context.strokeStyle = "#FF5C00"
  context.lineWidth = 16
 
@@ -21,60 +22,44 @@ proc drawAABB*(drawable: Drawable, context: Context) =
  # |
  # |
  # | } (0, 0)
- ctx.strokeSegment(
-  vec2(
-   drawable.bounds.min.x,
-   drawable.bounds.min.y
-  ),
-  vec2(
-   drawable.bounds.min.x,
-   drawable.bounds.max.y
-  )
+ context.strokeSegment(
+  drawable.bounds.min.x.float32,
+  drawable.bounds.min.y.float32,
+  drawable.bounds.min.x.float32,
+  drawable.bounds.max.y.float32
  )
 
  #             | } (10, 10)
  #             |
  #             |
  #             | } (10, 0)
- ctx.strokeSegment(
-  vec2(
-   drawable.bounds.max.x,
-   drawable.bounds.max.y
-  ),
-  vec2(
-   drawable.bounds.max.x,
-   drawable.bounds.min.y
-  )
+ context.strokeSegment(
+  drawable.bounds.max.x.float32,
+  drawable.bounds.max.y.float32,
+  drawable.bounds.max.x.float32,
+  drawable.bounds.min.y.float32
  )
 
  # -------------
  # ^           ^
  # (0, 10)   (10, 10)
  #
- ctx.strokeSegment(
-  vec2(
-   drawable.bounds.min.x,
-   drawable.bounds.max.y
-  ),
-  vec2(
-   drawable.bounds.max.x,
-   drawable.bounds.max.y
-  )
+ context.strokeSegment(
+  drawable.bounds.min.x.float32,
+  drawable.bounds.max.y.float32,
+  drawable.bounds.max.x.float32,
+  drawable.bounds.max.y.float32
  )
 
  #
  # (0, 0)    (10, 0)
  # v           v
  # -------------
- ctx.strokeSegment(
-  vec2(
-   drawable.bounds.min.x,
-   drawable.bounds.min.y
-  ),
-  vec2(
-   drawable.bounds.max.x,
-   drawable.bounds.min.y
-  )
+ context.strokeSegment(
+  drawable.bounds.min.x.float32,
+  drawable.bounds.min.y.float32,
+  drawable.bounds.max.x.float32,
+  drawable.bounds.min.y.float32
  )
 
 method draw*(drawable: Drawable, context: Context) {.base.} =
