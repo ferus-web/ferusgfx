@@ -3,6 +3,7 @@ import drawable, scene
 type
  DisplayList* = ref object of RootObj
   scene: Scene
+  doClearAll*: bool
   adds: seq[Drawable]
   removes: seq[uint]
 
@@ -18,11 +19,14 @@ proc commit*(displayList: DisplayList) =
   if drawObj.id in displayList.removes:
    rmList.add(idx)
 
- for toRemove in rmList:
-  displayList.scene.tree.delete(toRemove)
+ if not displayList.doClearAll:
+  for toRemove in rmList:
+   displayList.scene.tree.delete(toRemove)
+ else:
+  displayList.scene.tree.reset()
 
  for toAdd in displayList.adds:
   displayList.scene.tree.add(toAdd)
 
-proc newDisplayList*(scene: Scene): DisplayList =
- DisplayList(scene: scene, adds: @[], removes: @[])
+proc newDisplayList*(scene: Scene, doClearAll: bool = true): DisplayList =
+ DisplayList(scene: scene, adds: @[], removes: @[], doClearAll: doClearAll)

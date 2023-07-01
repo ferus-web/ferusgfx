@@ -10,9 +10,8 @@ type Drawable* = ref object of RootObj
  bounds*: tuple[min: Vector2, max: Vector2]
 
 proc drawAABB*(drawable: Drawable, context: Context) =
- echo "draw ay ay bee bee"
  context.strokeStyle = "#FF5C00"
- context.lineWidth = 16
+ context.lineWidth = 8
 
  # Example for these commands: 
  # min = Vector2(x: 0, y: 0), max = Vector2(x: 10, y: 10)
@@ -23,10 +22,16 @@ proc drawAABB*(drawable: Drawable, context: Context) =
  # |
  # | } (0, 0)
  context.strokeSegment(
-  drawable.bounds.min.x.float32,
-  drawable.bounds.min.y.float32,
-  drawable.bounds.min.x.float32,
-  drawable.bounds.max.y.float32
+  segment(
+   vec2(
+    drawable.bounds.min.x.float32,
+    drawable.bounds.min.y.float32
+   ),
+   vec2(
+    drawable.bounds.min.x.float32,
+    drawable.bounds.max.y.float32
+   )
+  )
  )
 
  #             | } (10, 10)
@@ -34,10 +39,16 @@ proc drawAABB*(drawable: Drawable, context: Context) =
  #             |
  #             | } (10, 0)
  context.strokeSegment(
-  drawable.bounds.max.x.float32,
-  drawable.bounds.max.y.float32,
-  drawable.bounds.max.x.float32,
-  drawable.bounds.min.y.float32
+  segment(
+   vec2(
+    drawable.bounds.max.x.float32,
+    drawable.bounds.max.y.float32
+   ),
+   vec2(
+    drawable.bounds.max.x.float32,
+    drawable.bounds.min.y.float32
+   )
+  )
  )
 
  # -------------
@@ -45,10 +56,16 @@ proc drawAABB*(drawable: Drawable, context: Context) =
  # (0, 10)   (10, 10)
  #
  context.strokeSegment(
-  drawable.bounds.min.x.float32,
-  drawable.bounds.max.y.float32,
-  drawable.bounds.max.x.float32,
-  drawable.bounds.max.y.float32
+  segment(
+   vec2(
+    drawable.bounds.min.x.float32,
+    drawable.bounds.max.y.float32
+   ),
+   vec2(
+    drawable.bounds.max.x.float32,
+    drawable.bounds.max.y.float32
+   )
+  )
  )
 
  #
@@ -56,10 +73,16 @@ proc drawAABB*(drawable: Drawable, context: Context) =
  # v           v
  # -------------
  context.strokeSegment(
-  drawable.bounds.min.x.float32,
-  drawable.bounds.min.y.float32,
-  drawable.bounds.max.x.float32,
-  drawable.bounds.min.y.float32
+  segment(
+   vec2(
+    drawable.bounds.min.x.float32,
+    drawable.bounds.min.y.float32
+   ),
+   vec2(
+    drawable.bounds.max.x.float32,
+    drawable.bounds.min.y.float32
+   )
+  )
  )
 
 method draw*(drawable: Drawable, context: Context) {.base.} =

@@ -15,13 +15,17 @@ test "example compositor":
   scene = newScene(WIDTH, HEIGHT)
   text = "ferusgfx is cool!"
 
+ # Load a font
+ scene.fontManager.load("Default", "tests/IBMPlexSans-Regular.ttf")
+
  proc render =
   let displayList = newDisplayList(scene)
   displayList.add(
    newTextNode(
     text,
-    newVector2(0, 0), 
-    scene.tree.len.uint
+    newVector2(600, 480), 
+    scene.tree.len.uint,
+    scene.fontManager
    )
   )
 

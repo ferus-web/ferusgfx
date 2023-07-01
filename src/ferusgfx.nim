@@ -1,3 +1,3 @@
-import ferusgfx/[canvas, drawable, scene, vectors, displaylist, textnode]
+import ferusgfx/[canvas, drawable, scene, vectors, fontmgr, displaylist, textnode]
 
-export canvas, drawable, scene, displaylist, textnode, vectors
+export fontmgr, canvas, drawable, scene, displaylist, textnode, vectors
