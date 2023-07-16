@@ -5,5 +5,8 @@ type Canvas* = ref object of RootObj
  width*: int
  height*: int
 
+proc createContext*(canvas: Canvas): Context =
+ newContext(canvas.image)
+
 proc newCanvas*(w, h: int): Canvas =
  Canvas(image: newImage(w, h), width: w, height: h)
