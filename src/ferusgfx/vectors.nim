@@ -1,17 +1,15 @@
 #[
  Vectors
 ]#
-import math
+import std/[strformat, math]
 
 type
- Vector3* = ref object of RootObj
-  x*: int
-  y*: int
-  z*: int
-
  Vector2* = ref object of RootObj
-  x*: int
-  y*: int
+  x*: float64
+  y*: float64
+
+proc `$`*(v2: Vector2): string =
+ fmt"x: {v2.x}; y: {v2.y}"
 
 #[proc magnitude*(vec2, othervec2: Vector2): float {.inline.} =
  sqrt(
@@ -23,8 +21,8 @@ proc magnitude*(vec3, othervec3: Vector3): float {.inline.} =
   (othervec3.x - vec3.x) ^ 2 + (othervec3.y - vec3.y) ^ 2 + (othervec3.z - vec3.z)
  )]#
 
-proc newVector2*(x, y: int): Vector2 =
+proc newVector2*(x, y: float64): Vector2 =
  Vector2(x: x, y: y)
 
-proc newVector3*(x, y, z: int): Vector3 =
- Vector3(x: x, y: y, z: z)
+proc newVector2*(x, y: int): Vector2 =
+ Vector2(x: x.float64, y: y.float64)
