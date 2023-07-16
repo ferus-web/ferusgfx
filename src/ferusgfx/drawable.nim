@@ -9,6 +9,16 @@ type Drawable* = ref object of RootObj
  position*: Vector2
  bounds*: tuple[min: Vector2, max: Vector2]
 
+ config*: tuple[
+  needsRedraw: bool
+ ]
+
+proc markRedraw*(drawable: Drawable) =
+ drawable.config.needsRedraw = true
+
+proc needsRedraw*(drawable: Drawable): bool =
+ drawable.config.needsRedraw
+
 proc drawAABB*(drawable: Drawable, context: Context) =
  context.strokeStyle = "#FF5C00"
  context.lineWidth = 8
