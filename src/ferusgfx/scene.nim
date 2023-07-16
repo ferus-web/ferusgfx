@@ -4,8 +4,31 @@
  This code is licensed under the MIT license
 ]#
 import canvas, drawable, 
-       pixie, boxy,
-       opengl, fontmgr, std/times
+       pixie, boxy, librng,
+       opengl, fontmgr, std/[strutils, times]
+
+var ALPHABETS: seq[char] = @[]
+
+# populate ALPHABETS
+for a in 'a'..'z':
+ ALPHABETS.add(a)
+
+for a in 'A'..'Z':
+ ALPHABETS.add(a)
+
+for n in '0'..'9':
+ ALPHABETS.add(n)
+
+proc genImageId(rng: RNG): string =
+ var 
+  x = ""
+
+ for _ in 0..16:
+  x &= rng.choice(
+   ALPHABETS
+  )
+
+ x
 
 type Scene* = ref object of RootObj
  bxContext*: Boxy
@@ -19,6 +42,8 @@ type Scene* = ref object of RootObj
 
  # window lib-agnostic way of getting dt
  lastTime: float
+
+ rng: RNG
 
 proc getDt*(scene: Scene): float =
  let time = cpuTime() - scene.lastTime
@@ -39,21 +64,24 @@ proc onMaximize*(scene: Scene) =
  scene.maximized = true
  scene.minimized = false
 
-proc blit*(scene: Scene) =
+proc blit*(scene: Scene): string =
  scene.canvas.image.fill(rgba(255, 255, 255, 255))
  
  for drawObj in scene.tree:
   # Only create contexts and re-draw drawables onto the
   # image if they are marked in need to be redrawn.
   if drawObj.needsRedraw():
-   echo "redraw " & $drawObj.id
    # Allocate context for this drawable
    let context = scene.canvas.createContext()
    drawObj.draw(context)
 
- scene.bxContext.addImage("final_image", scene.canvas.image)
+ let imgId = genImageId(scene.rng)
+ scene.bxContext.addImage(imgId, scene.canvas.image)
 
-proc draw*(scene: Scene) =
+ # scene.canvas.image.writeFile("e.png")
+ imgId
+
+proc draw*(scene: Scene, imgId: string) =
  # Now that every drawable has blitted itself to the
  # screen, let's go ahead and draw it to the window.
  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -62,13 +90,14 @@ proc draw*(scene: Scene) =
  scene.bxContext.beginFrame(
   ivec2(scene.canvas.width.int32, scene.canvas.height.int32)
  )
- scene.bxContext.drawImage("final_image", vec2(0, 0))
+ scene.bxContext.drawImage(imgId, vec2(0, 0))
  scene.bxContext.endFrame()
+
  scene.lastTime = cpuTime()
 
-proc newScene*(canvas: Canvas): Scene =
+proc newScene*: Scene =
  Scene(
-  canvas: canvas,
   bxContext: newBoxy(), lastTime: 0f,
-  tree: @[], fontManager: newFontManager()
+  tree: @[], fontManager: newFontManager(),
+  rng: newRNG()
  )
