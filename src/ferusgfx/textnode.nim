@@ -8,19 +8,25 @@ type
 
 method draw*(textNode: TextNode, context: Context) =
  context.font = textNode.fPath
- textNode.drawAABB(context)
+ #textNode.drawAABB(context)
  
  context.fillText(
   textNode.textContent, 
-  vec2(textNode.position.x.float32, textNode.position.y.float32)
+  vec2(
+   textNode.position.x.float32, 
+   textNode.position.y.float32
+  )
  )
+
 
 proc computeSize(textContent: string, font: Font): Vector2 =
  let
   width = textContent.len * font.size.int
   height = font.size.int
 
- Vector2(x: width, y: height)
+ newVector2(
+  width, height
+ )
 
 proc newTextNode*(
   textContent: string, 
@@ -34,5 +40,8 @@ proc newTextNode*(
    min: pos,
    max: computeSize(textContent, fontMgr.get("Default"))
   ),
-  fPath: fontMgr.getPath("Default")
+  fPath: fontMgr.getPath("Default"),
+  config: (
+   needsRedraw: true
+  )
  )
