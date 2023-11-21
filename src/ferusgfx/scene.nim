@@ -20,14 +20,13 @@ for n in '0'..'9':
  ALPHABETS.add(n)
 
 proc genImageId(rng: RNG): string =
- var 
-  x = ""
+ var x = ""
 
  for _ in 0..16:
   x &= rng.choice(
    ALPHABETS
   )
-
+  
  x
 
 type Scene* = ref object of RootObj
@@ -66,19 +65,14 @@ proc onMaximize*(scene: Scene) =
 
 proc blit*(scene: Scene): string =
  scene.canvas.image.fill(rgba(255, 255, 255, 255))
- 
+
  for drawObj in scene.tree:
-  # Only create contexts and re-draw drawables onto the
-  # image if they are marked in need to be redrawn.
   if drawObj.needsRedraw():
-   # Allocate context for this drawable
-   let context = scene.canvas.createContext()
-   drawObj.draw(context)
+   drawObj.draw(scene.canvas.image)
 
  let imgId = genImageId(scene.rng)
  scene.bxContext.addImage(imgId, scene.canvas.image)
 
- # scene.canvas.image.writeFile("e.png")
  imgId
 
 proc draw*(scene: Scene, imgId: string) =
@@ -95,9 +89,9 @@ proc draw*(scene: Scene, imgId: string) =
 
  scene.lastTime = cpuTime()
 
-proc newScene*: Scene =
+proc newScene*(width, height: int): Scene =
  Scene(
   bxContext: newBoxy(), lastTime: 0f,
   tree: @[], fontManager: newFontManager(),
-  rng: newRNG()
+  rng: newRNG(), canvas: newCanvas(width, height)
  )

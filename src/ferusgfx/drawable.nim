@@ -13,10 +13,10 @@ type Drawable* = ref object of RootObj
   needsRedraw: bool
  ]
 
-proc markRedraw*(drawable: Drawable) =
- drawable.config.needsRedraw = true
+proc markRedraw*(drawable: Drawable, val: bool = true) {.inline.} =
+ drawable.config.needsRedraw = val
 
-proc needsRedraw*(drawable: Drawable): bool =
+proc needsRedraw*(drawable: Drawable): bool {.inline.} =
  drawable.config.needsRedraw
 
 proc drawAABB*(drawable: Drawable, context: Context) =
@@ -95,5 +95,5 @@ proc drawAABB*(drawable: Drawable, context: Context) =
   )
  )
 
-method draw*(drawable: Drawable, context: Context) {.base.} =
+method draw*(drawable: Drawable, image: Image) {.base.} =
  return

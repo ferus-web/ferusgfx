@@ -46,7 +46,7 @@ proc commit*(displayList: DisplayList) =
    toChangePos.drawable.position = toChangePos.pos
    toChangePos.drawable.markRedraw()
 
- #displayList.reset()
+ displayList.reset()
 
 proc newDisplayList*(scene: Scene, doClearAll: bool = false): DisplayList =
  DisplayList(scene: scene, adds: @[], removes: @[], doClearAll: doClearAll)

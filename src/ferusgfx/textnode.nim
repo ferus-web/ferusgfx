@@ -4,20 +4,33 @@ type
  TextNode* = ref object of Drawable
   textContent*: string
   font*: Font
-  fPath*: string
+  fPath: string
 
-method draw*(textNode: TextNode, context: Context) =
- context.font = textNode.fPath
+  wrap*: bool
+
+method draw*(textNode: TextNode, image: Image) =
  #textNode.drawAABB(context)
- 
- context.fillText(
+
+ image.fillText(
+  # This is horribly, horribly inefficient.
+  # aaand, I somehow never caught it. God damn it!
+  #[textNode.font, 
   textNode.textContent, 
   vec2(
    textNode.position.x.float32, 
    textNode.position.y.float32
+  ).translate() ]#
+
+  textNode.font.typeset(
+    textNode.textContent,
+    vec2(8, 8),
+    LeftAlign, TopAlign,
+    textNode.wrap
+  ),
+  translate(
+    vec2(textNode.position.x.float32, textNode.position.y.float32)
   )
  )
-
 
 proc computeSize(textContent: string, font: Font): Vector2 =
  let

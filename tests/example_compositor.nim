@@ -12,8 +12,7 @@ test "example compositor":
  loadExtensions()
 
  let 
-  theatre = newTheatre(WIDTH, HEIGHT)
-  scene = newScene()
+  scene = newScene(WIDTH, HEIGHT)
   text = """
 MaryLou wore the tiara with pride. 
 There was something that made doing anything she didn't really want to do a bit easier when she wore it. 
@@ -31,21 +30,19 @@ If he lied, she'd know that he wasn't who she thought he was which would be almo
 Yet she asked the question anyway and waited for his answer.
 """
 
- theatre.addScene(scene)
- theatre.setCurrentScene(0)
-
  window.onResize = proc() =
-  theatre.onResize(
+  scene.onResize(
    (w: window.size.x.int, h: window.size.y.int)
   )
 
- window.onScroll = proc() =
-  theatre.onScroll(window.scrollDelta.y)
+ #[window.onScroll = proc() =
+  scene.onScroll(window.scrollDelta.y)]#
 
  # Load a font
  scene.fontManager.load("Default", "tests/IBMPlexSans-Regular.ttf")
 
- let displayList = newDisplayList(scene)
+ var displayList = newDisplayList(scene)
+
  displayList.add(
   newTextNode(
    text,
@@ -56,9 +53,10 @@ Yet she asked the question anyway and waited for his answer.
  )
 
  displayList.commit()
-
  while not window.closeRequested:
-  theatre.draw(displayList)
-
+  let frameId = scene.blit()
+  
+  echo frameId
+  scene.draw(frameId)
   window.swapBuffers()
   pollEvents()
