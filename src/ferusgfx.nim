@@ -1,7 +1,7 @@
 import ferusgfx/[canvas, drawable, scene, 
-  vectors, fontmgr, displaylist, 
-  textnode, theatre, camera]
+  fontmgr, displaylist, 
+  textnode], vmath
 
 export fontmgr, canvas, drawable, 
        scene, displaylist, textnode, 
-       vectors, theatre, camera
+       vmath

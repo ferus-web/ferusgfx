@@ -2,12 +2,12 @@
  A drawable, can be included in a display list
 ]#
 
-import pixie, vectors
+import pixie, bumpy
 
 type Drawable* = ref object of RootObj
  id*: uint
- position*: Vector2
- bounds*: tuple[min: Vector2, max: Vector2]
+ position*: Vec2
+ bounds*: Rect
 
  config*: tuple[
   needsRedraw: bool
@@ -19,7 +19,7 @@ proc markRedraw*(drawable: Drawable, val: bool = true) {.inline.} =
 proc needsRedraw*(drawable: Drawable): bool {.inline.} =
  drawable.config.needsRedraw
 
-proc drawAABB*(drawable: Drawable, context: Context) =
+#[proc drawAABB*(drawable: Drawable, context: Context) =
  context.strokeStyle = "#FF5C00"
  context.lineWidth = 8
 
@@ -93,7 +93,7 @@ proc drawAABB*(drawable: Drawable, context: Context) =
     drawable.bounds.min.y.float32
    )
   )
- )
+ )]#
 
 method draw*(drawable: Drawable, image: Image) {.base.} =
  return

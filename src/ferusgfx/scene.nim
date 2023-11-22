@@ -4,7 +4,7 @@
  This code is licensed under the MIT license
 ]#
 import canvas, drawable, 
-       pixie, boxy, librng,
+       pixie, boxy, bumpy, librng,
        opengl, fontmgr, std/[strutils, times]
 
 var ALPHABETS: seq[char] = @[]
@@ -42,6 +42,8 @@ type Scene* = ref object of RootObj
  # window lib-agnostic way of getting dt
  lastTime: float
 
+ lastImageId: string
+
  rng: RNG
 
 proc getDt*(scene: Scene): float =
@@ -52,6 +54,9 @@ proc onResize*(scene: Scene, nDimensions: tuple[w, h: int]) =
  scene.canvas.width = nDimensions.w
  scene.canvas.height = nDimensions.h
  scene.canvas.image = newImage(nDimensions.w, nDimensions.h)
+
+ for drawObj in scene.tree:
+   drawObj.markRedraw(true)
 
 proc onMinimize*(scene: Scene) =
  if scene.minimized: return
@@ -64,16 +69,32 @@ proc onMaximize*(scene: Scene) =
  scene.minimized = false
 
 proc blit*(scene: Scene): string =
- scene.canvas.image.fill(rgba(255, 255, 255, 255))
+ when defined(ferusgfxDontUseDamageRenderer):
+  scene.canvas.image.fill(rgba(255, 255, 255, 255))
+
+ let context = newContext(scene.canvas.image)
+ context.fillStyle = "#ffffff"
+ 
+ var changed = false
 
  for drawObj in scene.tree:
-  if drawObj.needsRedraw():
-   drawObj.draw(scene.canvas.image)
+  when not defined(ferusgfxDontUseDamageRenderer):
+   if drawObj.needsRedraw():
+    changed = true
+    fillRect(context, drawObj.bounds) # only clear out the parts that have to be redrawn
+    drawObj.draw(scene.canvas.image)
+  else:
+    changed = true
+    drawObj.draw(scene.canvas.image)
 
- let imgId = genImageId(scene.rng)
- scene.bxContext.addImage(imgId, scene.canvas.image)
+ if changed:
+  let imgId = genImageId(scene.rng)
+  scene.bxContext.addImage(imgId, scene.canvas.image)
+  scene.lastImageId = imgId
 
- imgId
+  return imgId
+ else:
+  return scene.lastImageId
 
 proc draw*(scene: Scene, imgId: string) =
  # Now that every drawable has blitted itself to the

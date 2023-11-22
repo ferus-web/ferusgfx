@@ -1,4 +1,4 @@
-import drawable, scene, vectors
+import vmath, drawable, scene
 
 type
  DisplayList* = ref object of RootObj
@@ -6,7 +6,7 @@ type
   doClearAll*: bool
   adds: seq[Drawable]
   removes: seq[uint]
-  posChange: seq[tuple[drawable: Drawable, pos: Vector2]]
+  posChange: seq[tuple[drawable: Drawable, pos: Vec2]]
 
 proc reset*(displayList: DisplayList) =
  displayList.doClearAll = false
@@ -20,7 +20,7 @@ proc add*(displayList: DisplayList, drawObj: Drawable) =
 proc remove*(displayList: DisplayList, drawObj: Drawable) =
  displayList.removes.add(drawObj.id)
 
-proc setPos*(displayList: DisplayList, drawObj: Drawable, position: Vector2) =
+proc setPos*(displayList: DisplayList, drawObj: Drawable, position: Vec2) =
  displayList.posChange.add(
   (drawable: drawObj, pos: position)
  )
