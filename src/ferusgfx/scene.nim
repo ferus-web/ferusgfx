@@ -41,6 +41,7 @@ type Scene* = ref object of RootObj
 
  # window lib-agnostic way of getting dt
  lastTime: float
+ drawIds*: seq[string]
 
  lastImageId: string
 
@@ -68,51 +69,39 @@ proc onMaximize*(scene: Scene) =
  scene.maximized = true
  scene.minimized = false
 
-proc blit*(scene: Scene): string =
- when defined(ferusgfxDontUseDamageRenderer):
-  scene.canvas.image.fill(rgba(255, 255, 255, 255))
-
- let context = newContext(scene.canvas.image)
- context.fillStyle = "#ffffff"
- 
- var changed = false
-
+proc blit*(scene: Scene) =
+ scene.bxContext.drawImage("background", vec2(0, 0))
  for drawObj in scene.tree:
-  when not defined(ferusgfxDontUseDamageRenderer):
-   if drawObj.needsRedraw():
-    changed = true
-    fillRect(context, drawObj.bounds) # only clear out the parts that have to be redrawn
-    drawObj.draw(scene.canvas.image)
-  else:
-    changed = true
-    drawObj.draw(scene.canvas.image)
+   var id = genImageId(scene.rng)
 
- if changed:
-  let imgId = genImageId(scene.rng)
-  scene.bxContext.addImage(imgId, scene.canvas.image)
-  scene.lastImageId = imgId
+   while id in scene.drawIds:
+     `=destroy`(id)
+     id = genImageId(scene.rng)
 
-  return imgId
- else:
-  return scene.lastImageId
-
-proc draw*(scene: Scene, imgId: string) =
- # Now that every drawable has blitted itself to the
- # screen, let's go ahead and draw it to the window.
+   drawObj.draw()
+   
+   scene.bxContext.addImage(id, drawObj.image)
+   scene.bxContext.drawImage(id, drawObj.position)
+ 
+proc draw*(scene: Scene) =
+ ## Clears the screen, blits all drawables to the screen and
+ ## finishes a frame.
  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
  glClearColor(0f, 0.5f, 0.5f, 1f)
-
+ 
  scene.bxContext.beginFrame(
-  ivec2(scene.canvas.width.int32, scene.canvas.height.int32)
+   ivec2(scene.canvas.width.int32, scene.canvas.height.int32)
  )
- scene.bxContext.drawImage(imgId, vec2(0, 0))
+ scene.blit()
  scene.bxContext.endFrame()
-
  scene.lastTime = cpuTime()
 
 proc newScene*(width, height: int): Scene =
- Scene(
+ result = Scene(
   bxContext: newBoxy(), lastTime: 0f,
   tree: @[], fontManager: newFontManager(),
   rng: newRNG(), canvas: newCanvas(width, height)
  )
+ var bg = newImage(width, height)
+ bg.fill(rgba(255, 255, 255, 255))
+ result.bxContext.addImage("background", bg)

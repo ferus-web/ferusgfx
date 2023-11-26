@@ -1,35 +1,31 @@
-import drawable, pixie, fontmgr
+import drawable, pixie, bumpy, fontmgr
 
 type
  TextNode* = ref object of Drawable
   textContent*: string
+  arrangement*: Arrangement
+  globalBounds*: Rect
+  imageSpace*: Mat3
+
   font*: Font
   fPath: string
 
   wrap*: bool
 
-method draw*(textNode: TextNode, image: Image) =
+proc compute*(textNode: TextNode) =
+  let transform = translate textNode.position
+  textNode.arrangement = typeset(@[newSpan(textNode.textContent, textNode.font)])
+  textNode.globalBounds = textNode.arrangement.computeBounds(transform)
+
+  textNode.imageSpace = translate(-textNode.globalBounds.xy) * transform
+
+method draw*(textNode: TextNode) =
  #textNode.drawAABB(context)
+ textNode.image.fill(rgba(255, 255, 255, 1))
 
- image.fillText(
-  # This is horribly, horribly inefficient.
-  # aaand, I somehow never caught it. God damn it!
-  #[textNode.font, 
-  textNode.textContent, 
-  vec2(
-   textNode.position.x.float32, 
-   textNode.position.y.float32
-  ).translate() ]#
-
-  textNode.font.typeset(
-    textNode.textContent,
-    vec2(8, 8),
-    LeftAlign, TopAlign,
-    textNode.wrap
-  ),
-  translate(
-    textNode.position
-  )
+ textNode.image.fillText(
+  textNode.arrangement,
+  textNode.imageSpace
  )
 
  textNode.markRedraw(false)
@@ -48,10 +44,11 @@ proc newTextNode*(
   pos: Vec2, id: uint, fontMgr: FontManager): TextNode =
  let size = computeSize(textContent, fontMgr.get("Default"))
 
- TextNode(
+ result = TextNode(
   id: id,
   textContent: textContent, 
   position: pos,
+  image: newImage(size.x.int, size.y.int),
   font: fontMgr.get("Default"),
   bounds: rect(pos.x, pos.y, size.x, size.y),
   fPath: fontMgr.getPath("Default"),
@@ -59,3 +56,5 @@ proc newTextNode*(
    needsRedraw: true
   )
  )
+
+ compute result

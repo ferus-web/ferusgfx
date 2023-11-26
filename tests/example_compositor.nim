@@ -49,8 +49,6 @@ test "example compositor":
 
  displayList.commit()
  while not window.closeRequested:
-  let frameId = scene.blit()
-  
-  scene.draw(frameId)
+  scene.draw()
   window.swapBuffers()
   pollEvents()

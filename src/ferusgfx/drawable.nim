@@ -2,12 +2,14 @@
  A drawable, can be included in a display list
 ]#
 
-import pixie, bumpy
+import pixie, bumpy, boxy
 
 type Drawable* = ref object of RootObj
  id*: uint
  position*: Vec2
+ boxy*: Boxy
  bounds*: Rect
+ image*: Image
 
  config*: tuple[
   needsRedraw: bool
@@ -95,5 +97,5 @@ proc needsRedraw*(drawable: Drawable): bool {.inline.} =
   )
  )]#
 
-method draw*(drawable: Drawable, image: Image) {.base.} =
+method draw*(drawable: Drawable) {.base.} =
  return
