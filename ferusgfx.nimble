@@ -9,13 +9,18 @@ srcDir        = "src"
 
 # Dependencies
 
-requires "nim >= 1.6.12"
-requires "windy"
-requires "vmath"
-requires "pixie"
-requires "boxy"
-requires "opengl"
-requires "librng"
+requires "nim >= 2.0.0"
+requires "windy >= 0.0.0" 
+requires "vmath >= 1.1.4"
+requires "pixie >= 5.0.6"
+requires "boxy >= 0.4.2"
+requires "opengl >= 1.2.9"
+requires "librng >= 0.1.3"
+
+taskRequires "fmt", "nph >= 0.5"
+
+task fmt, "Format code":
+  exec "nph src/"
 
 task example_compositor, "Runs a bare bones ferusgfx compositor":
  exec "nim c -r tests/example_compositor.nim"

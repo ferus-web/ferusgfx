@@ -1,54 +1,41 @@
-# requires: windy
-import windy, unittest, opengl, ../src/ferusgfx
+# requires: windy, lorem
+
+import windy, lorem, unittest, opengl, ../src/ferusgfx
 
 test "example compositor":
- const
-  WIDTH = 1280
-  HEIGHT = 720
+  const
+    WIDTH = 1280
+    HEIGHT = 720
 
- let window = newWindow("ferusgfx example compositor", ivec2(WIDTH, HEIGHT))
- window.makeContextCurrent()
+  let window = newWindow("ferusgfx example compositor", ivec2(WIDTH, HEIGHT))
+  window.makeContextCurrent()
 
- loadExtensions()
+  loadExtensions()
 
- let 
-  scene = newScene(WIDTH, HEIGHT)
-  text = "Hello World!"
-  text2 = "This scene is fully rendered using ferusgfx!"
+  let scene = newScene(WIDTH, HEIGHT)
 
- window.onResize = proc() =
-  scene.onResize(
-   (w: window.size.x.int, h: window.size.y.int)
-  )
+  window.onResize = proc() =
+    echo "resize!!!!"
+    scene.onResize((w: window.size.x.int, h: window.size.y.int))
 
- #[window.onScroll = proc() =
-  scene.onScroll(window.scrollDelta.y)]#
+  window.onScroll = proc() =
+    let delta = vec2(window.scrollDelta.x, window.scrollDelta.y)
+    scene.onScroll(delta)
 
- # Load a font
- scene.fontManager.load("Default", "tests/IBMPlexSans-Regular.ttf")
+  # Load a font
+  scene.fontManager.load("Default", "tests/IBMPlexSans-Regular.ttf")
 
- var displayList = newDisplayList(scene)
+  var displayList = newDisplayList(scene)
 
- displayList.add(
-  newTextNode(
-   text,
-   vec2(100f, HEIGHT / 2), 
-   scene.tree.len.uint,
-   scene.fontManager
-  )
- )
+  let baseY = HEIGHT / 2
+  
+  for y in 0 .. 1:
+    displayList.add(
+      newTextNode(sentence(), vec2(100f, baseY + float32(y * 16)), scene.tree.len.uint, scene.fontManager)
+    )
 
- displayList.add(
-  newTextNode(
-   text2,
-   vec2(100f, (HEIGHT / 2) + 20f),
-   scene.tree.len.uint,
-   scene.fontManager
-  )
- )
-
- displayList.commit()
- while not window.closeRequested:
-  scene.draw()
-  window.swapBuffers()
-  pollEvents()
+  displayList.commit()
+  while not window.closeRequested:
+    scene.draw()
+    window.swapBuffers()
+    pollEvents()

@@ -5,21 +5,19 @@
 import pixie, bumpy, boxy
 
 type Drawable* = ref object of RootObj
- id*: uint
- position*: Vec2
- boxy*: Boxy
- bounds*: Rect
- image*: Image
+  id*: uint
+  position*: Vec2
+  boxy*: Boxy
+  bounds*: Rect
+  image*: Image
 
- config*: tuple[
-  needsRedraw: bool
- ]
+  config*: tuple[needsRedraw: bool]
 
 proc markRedraw*(drawable: Drawable, val: bool = true) {.inline.} =
- drawable.config.needsRedraw = val
+  drawable.config.needsRedraw = val
 
 proc needsRedraw*(drawable: Drawable): bool {.inline.} =
- drawable.config.needsRedraw
+  drawable.config.needsRedraw
 
 #[proc drawAABB*(drawable: Drawable, context: Context) =
  context.strokeStyle = "#FF5C00"
@@ -98,4 +96,4 @@ proc needsRedraw*(drawable: Drawable): bool {.inline.} =
  )]#
 
 method draw*(drawable: Drawable) {.base.} =
- return
+  return
