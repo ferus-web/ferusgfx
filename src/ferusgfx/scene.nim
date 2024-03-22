@@ -56,8 +56,6 @@ proc onMaximize*(scene: Scene) =
   scene.maximized = true
   scene.minimized = false
 
-import std/importutils
-
 proc blit*(scene: Scene) =
   scene.bxContext.drawImage("background", vec2(0, 0))
 
@@ -68,9 +66,6 @@ proc blit*(scene: Scene) =
     scene.bxContext.addImage(id, drawObj.image)
     scene.bxContext.drawImage(id, scene.camera.apply(drawObj.position))
   
-  privateAccess(scene.bxContext.type)
-  echo "Atlas size: " & $scene.bxContext.atlasSize
-
 proc draw*(scene: Scene) =
   ## Clears the screen, blits all drawables to the screen and
   ## finishes a frame.
