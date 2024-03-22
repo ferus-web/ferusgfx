@@ -1,6 +1,6 @@
 import pixie
 
-type Canvas* = ref object of RootObj
+type Canvas* = ref object
   image*: Image
   width*: int
   height*: int

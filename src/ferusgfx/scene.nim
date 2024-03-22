@@ -4,28 +4,8 @@
  This code is licensed under the MIT license
 ]#
 import std/[strutils, times]
-import pixie, boxy, librng, opengl
+import pixie, boxy, opengl
 import ./[fontmgr, drawable, canvas, camera]
-
-var ALPHABETS: seq[char] = @[]
-
-# populate ALPHABETS
-for a in 'a' .. 'z':
-  ALPHABETS.add(a)
-
-for a in 'A' .. 'Z':
-  ALPHABETS.add(a)
-
-for n in '0' .. '9':
-  ALPHABETS.add(n)
-
-proc genImageId(rng: RNG): string =
-  var x = ""
-
-  for _ in 0 .. 16:
-    x &= rng.choice(ALPHABETS)
-
-  x
 
 type Scene* = ref object
   bxContext*: Boxy
@@ -76,20 +56,20 @@ proc onMaximize*(scene: Scene) =
   scene.maximized = true
   scene.minimized = false
 
+import std/importutils
+
 proc blit*(scene: Scene) =
   scene.bxContext.drawImage("background", vec2(0, 0))
 
-  for drawObj in scene.tree:
-    var id = genImageId(scene.rng)
-
-    while id in scene.drawIds:
-      `=destroy`(id)
-      id = genImageId(scene.rng)
+  for i, drawObj in scene.tree:
+    let id = $i
 
     drawObj.draw()
-
     scene.bxContext.addImage(id, drawObj.image)
     scene.bxContext.drawImage(id, scene.camera.apply(drawObj.position))
+  
+  privateAccess(scene.bxContext.type)
+  echo "Atlas size: " & $scene.bxContext.atlasSize
 
 proc draw*(scene: Scene) =
   ## Clears the screen, blits all drawables to the screen and
@@ -101,6 +81,7 @@ proc draw*(scene: Scene) =
   scene.camera.update()
   scene.blit()
   scene.bxContext.endFrame()
+  scene.bxContext.removeImage("background")
   scene.bxContext.addImage("background", scene.canvas.image)
   scene.lastTime = cpuTime()
 
