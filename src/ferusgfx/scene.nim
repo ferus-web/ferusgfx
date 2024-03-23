@@ -74,7 +74,6 @@ proc draw*(scene: Scene) =
   scene.camera.update()
   scene.blit()
   scene.bxContext.endFrame()
-  scene.bxContext.removeImage("background")
   scene.bxContext.addImage("background", scene.canvas.image)
   scene.lastTime = cpuTime()
 
