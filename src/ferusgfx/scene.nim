@@ -3,7 +3,7 @@
 
  This code is licensed under the MIT license
 ]#
-import std/[strutils, times]
+import std/times
 import pixie, boxy, opengl
 import ./[fontmgr, drawable, canvas, camera]
 
@@ -23,8 +23,6 @@ type Scene* = ref object
   drawIds*: seq[string]
 
   lastImageId: string
-
-  rng: RNG
 
 proc getDt*(scene: Scene): float =
   let time = cpuTime() - scene.lastTime
@@ -86,7 +84,6 @@ proc newScene*(width, height: int): Scene =
     lastTime: 0f,
     tree: @[],
     fontManager: newFontManager(),
-    rng: newRNG(),
     camera: newCamera(),
     canvas: newCanvas(width, height),
   )
