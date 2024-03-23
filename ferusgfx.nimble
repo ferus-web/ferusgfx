@@ -15,7 +15,6 @@ requires "vmath >= 1.1.4"
 requires "pixie >= 5.0.6"
 requires "boxy >= 0.4.2"
 requires "opengl >= 1.2.9"
-requires "librng >= 0.1.3"
 
 taskRequires "fmt", "nph >= 0.5"
 
