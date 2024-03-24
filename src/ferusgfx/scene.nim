@@ -58,9 +58,11 @@ proc blit*(scene: Scene) =
   scene.bxContext.drawImage("background", vec2(0, 0))
 
   for i, drawObj in scene.tree:
+    if drawObj.needsRedraw():
+      drawObj.draw()
+
     let id = $i
 
-    drawObj.draw()
     scene.bxContext.addImage(id, drawObj.image)
     scene.bxContext.drawImage(id, scene.camera.apply(drawObj.position))
   
@@ -74,7 +76,6 @@ proc draw*(scene: Scene) =
   scene.camera.update()
   scene.blit()
   scene.bxContext.endFrame()
-  scene.bxContext.addImage("background", scene.canvas.image)
   scene.lastTime = cpuTime()
 
 proc newScene*(width, height: int): Scene =
