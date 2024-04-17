@@ -1,5 +1,5 @@
 # ferusgfx - a high performance rendering engine
-![ferusgfx's example compositor](https://github.com/ferus-web/ferusgfx/main/media/example_compositor.jpg)
+![ferusgfx's example compositor](https://github.com/ferus-web/ferusgfx/blob/1.0.0/media/example_compositor.jpg)
 
 ferusgfx is a rendering engine made for the Ferus web engine, made with the concept of "display lists" in mind. \
 
