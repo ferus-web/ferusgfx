@@ -1,92 +1,148 @@
-#[
- A 2D scene
+##
+## A 2D scene
+##
+## This code is licensed under the MIT license
+##
 
- This code is licensed under the MIT license
-]#
-import std/times
+import std/[options, times, logging]
 import pixie, boxy, opengl
-import ./[fontmgr, drawable, canvas, camera]
+import ./[fontmgr, drawable, camera, events]
 
-type Scene* = ref object
-  bxContext*: Boxy
-  canvas*: Canvas
-  tree*: seq[Drawable]
-  camera*: Camera
+type
+  OpenGLData* = object
+    version*, vendor*, device*: string
 
-  fontManager*: FontManager
+  Scene* = object
+    bxContext*: Boxy
+    tree*: seq[Drawable]
+    camera*: Camera
+    background*: Image
 
-  minimized: bool
-  maximized: bool
+    fontManager*: FontManager
+    eventManager*: EventManager
 
-  # window lib-agnostic way of getting delta time
-  lastTime: float
-  drawIds*: seq[string]
+    minimized: bool
+    maximized: bool
+    openglData*: OpenGLData
 
-  lastImageId: string
+    lastTime: float
 
-proc getDt*(scene: Scene): float =
+proc getDt*(scene: Scene): float {.inline.} =
   let time = cpuTime() - scene.lastTime
   time
 
-proc onResize*(scene: Scene, nDimensions: tuple[w, h: int]) =
-  scene.canvas.width = nDimensions.w
-  scene.canvas.height = nDimensions.h
-  scene.canvas.image = newImage(nDimensions.w, nDimensions.h)
-  scene.canvas.image.fill(rgba(255, 255, 255, 255))
- 
-  for drawObj in scene.tree:
-    drawObj.markRedraw(true)
+proc onResize*(scene: var Scene, nDimensions: tuple[w, h: int]) {.inline.} =
+  scene.background = newImage(nDimensions.w, nDimensions.h)
+  scene.background.fill(rgba(255, 255, 255, 255))
 
-proc onMinimize*(scene: Scene) =
+  #[
+  var pScene: ptr Scene = addr scene
+
+  scene.eventManager.add(
+    (age: uint) => pScene[].tree[age].markRedraw(),
+    scene.tree.len.uint,
+    @[tag 0], true
+  )
+  ]#
+
+proc onMinimize*(scene: var Scene) {.inline.} =
   if scene.minimized:
     return
 
   scene.maximized = false
   scene.minimized = true
 
-proc onScroll*(scene: Scene, delta: Vec2) =
+proc onScroll*(scene: var Scene, delta: Vec2) {.inline.} =
   scene.camera.scroll(delta)
 
-proc onMaximize*(scene: Scene) =
+proc get*(scene: Scene, id: int): Option[Drawable] {.inline.} =
+  if id < (scene.tree.len - 1):
+    some scene.tree[id]
+  else:
+    none Drawable
+
+proc set*(scene: var Scene, id: int, node: Drawable) {.inline.} =
+  scene.tree[id] = node
+
+proc add*(scene: var Scene, drawable: var Drawable) {.inline.} =
+  drawable.id = scene.tree.len.uint
+  scene.tree.add(drawable)
+
+proc onMaximize*(scene: var Scene) {.inline.} =
   if scene.maximized:
     return
 
   scene.maximized = true
   scene.minimized = false
 
-proc blit*(scene: Scene) =
+proc fullDamage*(scene: var Scene) {.inline.} =
+  debug "Performing full damage on scene; marking all drawables as needing a redraw. This will tank the performance!"
+  for i, _ in scene.tree:
+    var drawObj = scene.tree[i]
+    drawObj.markRedraw(true)
+
+proc blit*(scene: var Scene) {.inline.} =
   scene.bxContext.drawImage("background", vec2(0, 0))
 
   for i, drawObj in scene.tree:
-    if drawObj.needsRedraw():
-      drawObj.draw()
-
     let id = $i
 
-    scene.bxContext.addImage(id, drawObj.image)
+    if drawObj.needsRedraw():
+      var img = newImage(drawObj.bounds.w.int, drawObj.bounds.h.int)
+
+      drawObj.draw(img)
+      scene.bxContext.addImage(id, img)
+
     scene.bxContext.drawImage(id, scene.camera.apply(drawObj.position))
-  
-proc draw*(scene: Scene) =
+
+proc draw*(scene: var Scene) =
   ## Clears the screen, blits all drawables to the screen and
   ## finishes a frame.
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glClearColor(0f, 0.5f, 0.5f, 1f)
 
-  scene.bxContext.beginFrame(ivec2(scene.canvas.width.int32, scene.canvas.height.int32))
+  scene.bxContext.beginFrame(
+    ivec2(scene.background.width.int32, scene.background.height.int32)
+  )
   scene.camera.update()
+  scene.eventManager.poll()
   scene.blit()
   scene.bxContext.endFrame()
+  scene.bxContext.addImage("background", scene.background)
   scene.lastTime = cpuTime()
 
 proc newScene*(width, height: int): Scene =
+  ## Create a new scene with the provided dimensions.
+  
+  let 
+    vendor = $cast[cstring](glGetString(GL_VENDOR))
+    version = $cast[cstring](glGetString(GL_VERSION))
+    renderer = $cast[cstring](glGetString(GL_RENDERER))
+    extensions = $cast[cstring](glGetString(GL_EXTENSIONS))
+
+  info "New ferusgfx scene instantiating."
+  info "OpenGL: " & version
+  info "Renderer: " & renderer
+  info "Vendor: " & vendor
+  info "Extensions: " & extensions
+  info "Viewport: " & $width & 'x' & $height
+
   result = Scene(
     bxContext: newBoxy(),
     lastTime: 0f,
     tree: @[],
     fontManager: newFontManager(),
     camera: newCamera(),
-    canvas: newCanvas(width, height),
+    eventManager: newEventManager(),
+
+    openglData: OpenGLData(
+      version: version,
+      device: renderer,
+      vendor: vendor
+    )
   )
   var bg = newImage(width, height)
   bg.fill(rgba(255, 255, 255, 255))
+
+  result.background = bg
   result.bxContext.addImage("background", bg)

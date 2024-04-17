@@ -20,8 +20,8 @@ proc set*(
 proc load*(fontMgr: FontManager, name, path: string) {.inline.} =
   fontMgr.set(name, readFont(path), path)
 
-proc getPath*(fontMgr: FontManager, name: string): string =
+proc getPath*(fontMgr: FontManager, name: string): string {.inline.} =
   fontMgr.paths[name]
 
-proc newFontManager*(): FontManager =
+proc newFontManager*(): FontManager {.inline.} =
   FontManager(fonts: newTable[string, Font](), paths: newTable[string, string]())

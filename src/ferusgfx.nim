@@ -1,3 +1,4 @@
-import ferusgfx/[canvas, drawable, scene, fontmgr, displaylist, textnode, camera], vmath
+import
+  ferusgfx/[drawable, scene, fontmgr, displaylist, textnode, camera, imagenode], vmath
 
-export fontmgr, canvas, drawable, scene, displaylist, textnode, vmath, camera
+export fontmgr, drawable, scene, displaylist, textnode, vmath, imagenode, camera

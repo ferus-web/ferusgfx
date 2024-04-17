@@ -7,11 +7,19 @@ import pixie, bumpy, boxy
 type Drawable* = ref object of RootObj
   id*: uint
   position*: Vec2
-  boxy*: Boxy
   bounds*: Rect
-  image*: Image
-
   config*: tuple[needsRedraw: bool]
+
+#[proc `=copy`*(dest: var Drawable, src: Drawable) =
+  `=destroy`(dest)
+  wasMoved(dest)
+
+  dest.id = src.id
+  dest.position = src.position
+  dest.boxy = src.boxy
+  dest.bounds = src.bounds
+  dest.image = src.image
+  dest.config = src.config]#
 
 proc markRedraw*(drawable: Drawable, val: bool = true) {.inline.} =
   drawable.config.needsRedraw = val
@@ -95,5 +103,5 @@ proc needsRedraw*(drawable: Drawable): bool {.inline.} =
   )
  )]#
 
-method draw*(drawable: Drawable) {.base.} =
+method draw*(drawable: Drawable, image: var Image) {.base.} =
   return

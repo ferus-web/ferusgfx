@@ -16,7 +16,7 @@ requires "pixie >= 5.0.6"
 requires "boxy >= 0.4.2"
 requires "opengl >= 1.2.9"
 
-taskRequires "fmt", "nph >= 0.5"
+taskRequires "fmt", "nph >= 0.5.1"
 
 task fmt, "Format code":
   exec "nph src/"
