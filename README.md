@@ -2,7 +2,6 @@
 ![ferusgfx's example compositor](https://github.com/ferus-web/ferusgfx/blob/1.0.0/media/example_compositor.jpg)
 
 ferusgfx is a rendering engine made for the Ferus web engine, made with the concept of "display lists" in mind. \
-
 It uses OpenGL as its primary backend, but there are plans to add Vulkan support later on.
 
 # Installation
@@ -12,8 +11,10 @@ ferusgfx can be installed directly from Nimble. It requires a recent Nim version
 ```
 
 # How it works
-ferusgfx's main object is a `Scene`. It essentially acts as the rendering context and contains a tree full of `Drawable` objects (or types descending from `Drawable`). \
-The tree is not meant to be edited manually, rather, you should use `DisplayList`(s) to manipulate the scene tree and perform actions like adding drawables, removing them, etc. \
+ferusgfx's main object is a `Scene`. It essentially acts as the rendering context and contains a tree full of `Drawable` objects (or types descending from `Drawable`).
+
+The tree is not meant to be edited manually, rather, you should use `DisplayList`(s) to manipulate the scene tree and perform actions like adding drawables, removing them, etc.
+
 And as expected, `Drawable`s are not redrawn each frame unless they are marked as needing a redraw (or you call `fullDamage` on the scene).
 
 # Features
