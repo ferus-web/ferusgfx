@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.2"
+version       = "1.0.0"
 author        = "xTrayambak"
 description   = "High performance graphics pipeline for Ferus"
 license       = "MIT"
