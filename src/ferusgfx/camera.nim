@@ -1,5 +1,5 @@
 ## Cameras are used by ferusgfx to implement scrolling.
-import vmath
+import vmath, boxy
 
 type
   ScrollingOpts* = object ## Options for how scrolling should be done.
@@ -14,6 +14,7 @@ type
   Camera* = object ## A camera object.
     position: Vec2
     opts: ScrollingOpts
+    frustum: Rect
 
     hi: Vec2
     lo: Vec2
@@ -51,6 +52,26 @@ proc stopScrolling*(camera: var Camera) {.inline.} =
   ## **See also**:
   ## - `scroll(camera: Camera, delta: Vec2)`_ to increment/decrement the camera's delta vector.
   camera.delta = vec2(0, 0)
+
+proc calculateFrustum*(
+  camera: var Camera,
+  viewport: tuple[width, height: float32]
+) {.inline.} =
+  let
+    left = camera.position.x - viewport.width / 2f
+    right = camera.position.x - viewport.width / 2f
+    up = camera.position.y + viewport.height / 2f
+    down = camera.position.y - viewport.height / 2f
+
+  camera.frustum = rect(left, right, up, down)
+
+proc isCulled*(
+  camera: Camera, 
+  position: Vec2
+): bool {.inline.} =
+  false
+  #position.x > camera.frustum.x and position.x < camera.frustum.w and
+  #position.y > camera.frustum.y and position.y < camera.frustum.h
 
 proc scroll*(camera: var Camera, delta: Vec2) {.inline.} =
   ## Cause the camera's scrolling delta to be incremented/decremented by a `Vec2`.

@@ -6,7 +6,7 @@
 
 import std/[options, times, logging]
 import pixie, boxy, opengl
-import ./[fontmgr, drawable, camera, events]
+import ./[fontmgr, drawable, camera, events, gifnode, imagenode, textnode]
 
 type
   OpenGLData* = object
@@ -28,12 +28,14 @@ type
     lastTime: float
 
 proc getDt*(scene: Scene): float {.inline.} =
-  let time = cpuTime() - scene.lastTime
+  let time = epochTime() - scene.lastTime
   time
 
 proc onResize*(scene: var Scene, nDimensions: tuple[w, h: int]) {.inline.} =
   scene.background = newImage(nDimensions.w, nDimensions.h)
   scene.background.fill(rgba(255, 255, 255, 255))
+
+  scene.camera.calculateFrustum((width: nDimensions.w.float32, height: nDimensions.h.float32))
 
   #[
   var pScene: ptr Scene = addr scene
@@ -85,22 +87,40 @@ proc blit*(scene: var Scene) {.inline.} =
   scene.bxContext.drawImage("background", vec2(0, 0))
 
   for i, drawObj in scene.tree:
+    if scene.camera.isCulled(drawObj.position):
+      continue
+
     let id = $i
 
+    var multidraw: seq[int]
+    
     if drawObj.needsRedraw():
-      var img = newImage(drawObj.bounds.w.int, drawObj.bounds.h.int)
+      var 
+        img = newImage(drawObj.bounds.w.int, drawObj.bounds.h.int)
+        uploaded: seq[Image]
 
-      drawObj.draw(img)
-      scene.bxContext.addImage(id, img)
+      drawObj.draw(img, scene.getDt())
+      drawObj.upload(uploaded, scene.getDt())
 
-    scene.bxContext.drawImage(id, scene.camera.apply(drawObj.position))
+      if uploaded.len < 1:
+        scene.bxContext.addImage(id, img)
+      else:
+        for iu, imgu in uploaded:
+          scene.bxContext.addImage(id & '-' & $iu, imgu)
+          multidraw.add(iu)
+    
+    if multidraw.len < 1:
+      scene.bxContext.drawImage(id, scene.camera.apply(drawObj.position))
+    else:
+      for mid in multidraw:
+        scene.bxContext.drawImage(id & '-' & $mid, scene.camera.apply(drawObj.position))
 
 proc draw*(scene: var Scene) =
   ## Clears the screen, blits all drawables to the screen and
   ## finishes a frame.
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glClearColor(0f, 0.5f, 0.5f, 1f)
-
+  
   scene.bxContext.beginFrame(
     ivec2(scene.background.width.int32, scene.background.height.int32)
   )
@@ -109,7 +129,7 @@ proc draw*(scene: var Scene) =
   scene.blit()
   scene.bxContext.endFrame()
   scene.bxContext.addImage("background", scene.background)
-  scene.lastTime = cpuTime()
+  scene.lastTime = epochTime()
 
 proc newScene*(width, height: int): Scene =
   ## Create a new scene with the provided dimensions.

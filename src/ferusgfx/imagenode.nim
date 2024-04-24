@@ -4,7 +4,7 @@ type ImageNode* = ref object of Drawable
   path*: string
   image*: Image
 
-method draw*(node: ImageNode, src: var Image) =
+method draw*(node: ImageNode, src: var Image, dt: float32) =
   node.markRedraw(false)
   `=copy`(src, node.image)
 

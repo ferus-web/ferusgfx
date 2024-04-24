@@ -18,7 +18,7 @@ proc compute*(textNode: var TextNode) =
 
   textNode.imageSpace = translate(-textNode.globalBounds.xy) * transform
 
-method draw*(textNode: TextNode, image: var Image) =
+method draw*(textNode: TextNode, image: var Image, dt: float32) =
   #textNode.drawAABB(context)
   image.fill(rgba(255, 255, 255, 1))
   image.fillText(textNode.arrangement, textNode.imageSpace)
