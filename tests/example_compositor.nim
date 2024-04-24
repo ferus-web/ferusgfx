@@ -46,8 +46,8 @@ proc main {.inline.} =
     )
 
   displayList.add(
-    newImageNode(
-      "test_assets/tux.png",
+    newGIFNode(
+      "test_assets/test002.gif",
       vec2(100f, baseY + 100f)
     )
   )
