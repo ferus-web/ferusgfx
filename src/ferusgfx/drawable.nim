@@ -103,5 +103,5 @@ proc needsRedraw*(drawable: Drawable): bool {.inline.} =
   )
  )]#
 
-method draw*(drawable: Drawable, image: var Image) {.base.} =
-  return
+method draw*(drawable: Drawable, image: var Image, dt: float32) {.base.} = discard
+method upload*(drawable: Drawable, images: var seq[Image], dt: float32) {.base.} = discard
