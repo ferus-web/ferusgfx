@@ -78,7 +78,7 @@ proc onMaximize*(scene: var Scene) {.inline.} =
   scene.minimized = false
 
 proc fullDamage*(scene: var Scene) {.inline.} =
-  debug "Performing full damage on scene; marking all drawables as needing a redraw. This will tank the performance!"
+  when not defined(ferusInJail): debug "Performing full damage on scene; marking all drawables as needing a redraw. This will tank the performance!"
   for i, _ in scene.tree:
     var drawObj = scene.tree[i]
     drawObj.markRedraw(true)
@@ -139,13 +139,14 @@ proc newScene*(width, height: int): Scene =
     version = $cast[cstring](glGetString(GL_VERSION))
     renderer = $cast[cstring](glGetString(GL_RENDERER))
     extensions = $cast[cstring](glGetString(GL_EXTENSIONS))
-
-  info "New ferusgfx scene instantiating."
-  info "OpenGL: " & version
-  info "Renderer: " & renderer
-  info "Vendor: " & vendor
-  info "Extensions: " & extensions
-  info "Viewport: " & $width & 'x' & $height
+  
+  when not defined(ferusInJail):
+    info "New ferusgfx scene instantiating."
+    info "OpenGL: " & version
+    info "Renderer: " & renderer
+    info "Vendor: " & vendor
+    info "Extensions: " & extensions
+    info "Viewport: " & $width & 'x' & $height
 
   result = Scene(
     bxContext: newBoxy(),

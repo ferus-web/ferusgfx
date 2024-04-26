@@ -7,8 +7,9 @@ type FontManager* = ref object
 proc get*(fontMgr: FontManager, name: string): Font {.inline.} =
   if name in fontMgr.fonts:
     return fontMgr.fonts[name]
-
-  raise newException(ValueError, "Could not find font '" & name & "'")
+  
+  when not defined(ferusInJail):
+    raise newException(ValueError, "Could not find font '" & name & "'")
 
 proc set*(
     fontMgr: FontManager, name: string, font: Font, path: string = ""
