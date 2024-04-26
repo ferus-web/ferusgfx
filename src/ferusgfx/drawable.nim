@@ -9,6 +9,9 @@ type Drawable* = ref object of RootObj
   position*: Vec2
   bounds*: Rect
   config*: tuple[needsRedraw: bool]
+  
+  when defined(ferusgfxDrawDamagedRegions):
+    damageImage*: Image
 
 #[proc `=copy`*(dest: var Drawable, src: Drawable) =
   `=destroy`(dest)

@@ -1,5 +1,5 @@
 # requires: windy, lorem, colored_logger
-import std/[logging, options]
+import std/[logging, options, random]
 import windy, lorem, colored_logger, opengl, ../src/ferusgfx
 
 const
@@ -37,17 +37,18 @@ proc main {.inline.} =
   var displayList = newDisplayList(addr scene)
 
   var baseY = HEIGHT / 2
- 
+  
+  randomize()
   for y in 0 .. 256:
     let content = sentence()
     baseY += 16
     displayList.add(
       newTextNode(content, vec2(100f, baseY), scene.fontManager)
     )
-
+  
   displayList.add(
     newGIFNode(
-      "test_assets/test002.gif",
+      "test_assets/test00" & $(rand(1 .. 3)) & ".gif",
       vec2(100f, baseY + 100f)
     )
   )

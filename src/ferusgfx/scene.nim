@@ -93,14 +93,22 @@ proc blit*(scene: var Scene) {.inline.} =
     let id = $i
 
     var multidraw: seq[int]
+
+    when defined(ferusgfxDrawDamagedRegions):
+      var drawDamageRegion = false
     
     if drawObj.needsRedraw():
+      when defined(ferusgfxDrawDamagedRegions):
+        drawDamageRegion = true
       var 
         img = newImage(drawObj.bounds.w.int, drawObj.bounds.h.int)
         uploaded: seq[Image]
-
+      
       drawObj.draw(img, scene.getDt())
       drawObj.upload(uploaded, scene.getDt())
+
+      when defined(ferusgfxDrawDamagedRegions):
+        scene.bxContext.addImage(id & "-dmg", drawObj.damageImage)
 
       if uploaded.len < 1:
         scene.bxContext.addImage(id, img)
@@ -114,6 +122,10 @@ proc blit*(scene: var Scene) {.inline.} =
     else:
       for mid in multidraw:
         scene.bxContext.drawImage(id & '-' & $mid, scene.camera.apply(drawObj.position))
+    
+    when defined(ferusgfxDrawDamagedRegions):
+      if drawDamageRegion:
+        scene.bxContext.drawImage(id & "-dmg", scene.camera.apply(drawObj.position))
 
 proc draw*(scene: var Scene) =
   ## Clears the screen, blits all drawables to the screen and
