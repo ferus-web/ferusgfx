@@ -27,10 +27,10 @@ proc reset*(displayList: var DisplayList) =
   displayList.removes.reset()
   displayList.posChange.reset()
 
-proc add*[T](displayList: var GDisplayList[T], drawObj: Drawable) =
+proc add*[T](displayList: var GDisplayList[T], drawObj: T) =
   displayList.adds.add(drawObj)
 
-proc remove*[T](displayList: var GDisplayList[T], drawObj: Drawable) =
+proc remove*[T](displayList: var GDisplayList[T], drawObj: T) =
   displayList.removes.add(drawObj.id)
 
 proc setPos*[T](displayList: var GDisplayList[T], drawObj: T, position: Vec2) =
