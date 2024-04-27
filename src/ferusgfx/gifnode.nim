@@ -45,6 +45,29 @@ method upload*(node: GIFNode, src: var seq[Image], dt: float32) =
     node.timer = 0f
     src.add(node.gif.frames[0])
 
+proc newGIFNodeFromMemory*(content: string, pos: Vec2): GIFNode {.inline.} =
+  let
+    gif = decodeGif(content)
+    dims = decodeGifDimensions(content)
+
+  when defined(ferusgfxDrawDamagedRegions):
+    var paint = newPaint(SolidPaint)
+    paint.opacity = 0.5f
+    paint.color = color(1, 0, 0, 0.5)
+
+  result = GIFNode(
+    path: "<in-memory GIF>",
+    config: (needsRedraw: true),
+    position: pos,
+    bounds: rect(pos.x, pos.y, dims.width.float32, dims.height.float32),
+    gif: gif,
+    firstRun: true
+  )
+
+  when defined(ferusgfxDrawDamagedRegions):
+    result.damageImage = newImage(result.bounds.w.int32, result.bounds.y.int32)
+    result.damageImage.fill(paint)
+
 proc newGIFNode*(path: string, pos: Vec2): GIFNode {.inline.} =
   let
     contents = path.readFile()
