@@ -7,7 +7,6 @@ type TextNode* = ref object of Drawable
   imageSpace: Mat3
 
   font: Font
-  fPath: string
 
   wrap: bool
 
@@ -46,7 +45,6 @@ proc newTextNode*(
     position: pos,
     font: fontMgr.get("Default"),
     bounds: rect(pos.x, pos.y, size.x, size.y),
-    fPath: fontMgr.getPath("Default"),
     config: (needsRedraw: true)
   )
 
