@@ -5,15 +5,15 @@ type
     drawable*: T
     mut*: M
   
-  GDisplayList*[D: not void] = object
-    scene: ptr Scene
+  GDisplayList*[D: not void] = object of RootObj
     doClearAll*: bool
 
     adds: seq[D]
     removes: seq[uint]
     posChange: seq[DrawableMutationUnion[D, Vec2]]
 
-  DisplayList* = GDisplayList[Drawable]
+  DisplayList* = object of GDisplayList[Drawable]
+    scene: ptr Scene
 
 iterator items*[T, M](
     unions: seq[DrawableMutationUnion[T, M]]
