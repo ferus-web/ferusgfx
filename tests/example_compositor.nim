@@ -48,7 +48,7 @@ proc main {.inline.} =
   
   displayList.add(
     newGIFNode(
-      "test_assets/test00" & $(rand(1 .. 3)) & ".gif",
+      "test_assets/test003.gif", #& $(rand(1 .. 3)) & ".gif",
       vec2(100f, baseY + 100f)
     )
   )

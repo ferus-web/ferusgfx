@@ -27,15 +27,15 @@ proc reset*(displayList: var DisplayList) =
   displayList.removes.reset()
   displayList.posChange.reset()
 
-proc add*(displayList: var DisplayList, drawObj: Drawable) =
+proc add*[T](displayList: var GDisplayList[T], drawObj: Drawable) =
   displayList.adds.add(drawObj)
 
-proc remove*(displayList: var DisplayList, drawObj: Drawable) =
+proc remove*[T](displayList: var GDisplayList[T], drawObj: Drawable) =
   displayList.removes.add(drawObj.id)
 
-proc setPos*(displayList: var DisplayList, drawObj: Drawable, position: Vec2) =
+proc setPos*[T](displayList: var GDisplayList[T], drawObj: T, position: Vec2) =
   displayList.posChange.add(
-    DrawableMutationUnion[Drawable, Vec2](drawable: drawObj, mut: position)
+    DrawableMutationUnion[T, Vec2](drawable: drawObj, mut: position)
   )
 
 proc commit*(displayList: var DisplayList) =
