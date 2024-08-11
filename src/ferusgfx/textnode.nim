@@ -1,4 +1,5 @@
-import drawable, pixie, bumpy, fontmgr
+import ferusgfx/[drawable, fontmgr]
+import pixie, bumpy
 
 type TextNode* = ref object of Drawable
   textContent: string
@@ -17,10 +18,11 @@ proc compute*(textNode: var TextNode) =
 
   textNode.imageSpace = translate(-textNode.globalBounds.xy) * transform
 
-method draw*(textNode: TextNode, image: var Image, dt: float32) =
+method draw*(textNode: TextNode, image: ptr Image, dt: float32) =
+  assert image != nil
   #textNode.drawAABB(context)
-  image.fill(rgba(255, 255, 255, 1))
-  image.fillText(textNode.arrangement, textNode.imageSpace)
+  image[].fill(rgba(255, 255, 255, 1))
+  image[].fillText(textNode.arrangement, textNode.imageSpace)
   textNode.markRedraw(false)
 
 proc computeSize(textContent: string, font: Font): Vec2 =
@@ -31,7 +33,7 @@ proc computeSize(textContent: string, font: Font): Vec2 =
   vec2(width.float32, height.float32)
 
 proc newTextNode*(
-    textContent: string, pos: Vec2, fontMgr: FontManager
+    textContent: sink string, pos: Vec2, fontMgr: FontManager
 ): TextNode {.inline.} =
   let size = computeSize(textContent, fontMgr.get("Default"))
   
@@ -41,7 +43,7 @@ proc newTextNode*(
     paint.color = color(1, 0, 0, 0.5)
 
   result = TextNode(
-    textContent: textContent,
+    textContent: move(textContent),
     position: pos,
     font: fontMgr.get("Default"),
     bounds: rect(pos.x, pos.y, size.x, size.y),

@@ -1,5 +1,5 @@
 ## Cameras are used by ferusgfx to implement scrolling.
-import vmath, boxy
+import vmath, bumpy, boxy
 
 type
   ScrollingOpts* = object ## Options for how scrolling should be done.
@@ -14,7 +14,7 @@ type
   Camera* = object ## A camera object.
     position: Vec2
     opts: ScrollingOpts
-    frustum: Rect
+    bounds*: Rect
 
     hi: Vec2
     lo: Vec2
@@ -38,12 +38,11 @@ proc update*(camera: var Camera) {.thread, nimcall.} =
 
   # Camera bounds checks
   if camera.position.y < camera.lo.y:
-    camera.delta = vec2(camera.delta.x, -1)
-      # apply a small "thrust" backwards as in to indicate that the viewport's border has been hit
+    camera.delta = vec2(camera.delta.x, -1) # apply a small "thrust" backwards as in to indicate that the viewport's border has been hit
     camera.position = vec2(camera.position.x, camera.lo.y)
 
   if camera.position.y > camera.hi.y:
-    camera.delta = vec2(camera.delta.x, 1) # same as the above comment
+    camera.delta = vec2(camera.delta.x, 1) # same as the above comment except it pushes you forwards
     camera.position = vec2(camera.position.x, camera.hi.y)
 
 proc stopScrolling*(camera: var Camera) {.inline.} =
@@ -57,21 +56,20 @@ proc calculateFrustum*(
   camera: var Camera,
   viewport: tuple[width, height: float32]
 ) {.inline.} =
-  let
-    left = camera.position.x - viewport.width / 2f
-    right = camera.position.x - viewport.width / 2f
-    up = camera.position.y + viewport.height / 2f
-    down = camera.position.y - viewport.height / 2f
+  camera.bounds.x = camera.position.x
+  camera.bounds.y = camera.position.y
 
-  camera.frustum = rect(left, right, up, down)
+  camera.bounds.w = viewport.width
+  camera.bounds.h = viewport.height
 
 proc isCulled*(
   camera: Camera, 
-  position: Vec2
+  rect: Rect
 ): bool {.inline.} =
-  false
-  #position.x > camera.frustum.x and position.x < camera.frustum.w and
-  #position.y > camera.frustum.y and position.y < camera.frustum.h
+  var bounds = camera.bounds
+  bounds.w += 150f # really stupid fix to prevent pop-ins
+  bounds.h += 150f
+  not bounds.overlaps(rect)
 
 proc scroll*(camera: var Camera, delta: Vec2) {.inline.} =
   ## Cause the camera's scrolling delta to be incremented/decremented by a `Vec2`.

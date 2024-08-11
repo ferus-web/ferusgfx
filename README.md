@@ -28,7 +28,7 @@ ferusgfx is primarily meant for applications that show a lot of text and images.
 
 # Bare bones example
 A more fleshed out example can be seen in `tests/example_compositor.nim`. \
-[windy](https://github.com/treeform/windy) is used here but ferusgfx is window-library-agnostic so anything can be used here.
+[windy](https://github.com/treeform/windy) is used here but ferusgfx is window-library-agnostic so anything can be used here. The example compositor has support for both GLFW and Windy that can be enabled/disabled via `-d:compositorUseWindy`.
 ```nim
 import ferusgfx, windy, opengl
 
@@ -36,9 +36,11 @@ const
   WIDTH = 1280
   HEIGHT = 720
 
+# create our window
 let window = newWindow("ferusgfx barebones compositor", ivec2(WIDTH, HEIGHT))
 window.makeContextCurrent()
 
+# load OpenGL
 loadExtensions()
 
 var scene = newScene(WIDTH, HEIGHT)
@@ -49,7 +51,7 @@ window.onResize = proc() =
 
 window.onScroll = proc() =
   # ferusgfx sends this info to the camera, which applies some math to scroll the view
-  # each frame a little bit, making it pretty smooth.
+  # each frame a little bit, making it pretty smooth. It also uses it for some rudimentary culling logic.
   scene.onScroll(
     vec2(window.scrollDelta.x, window.scrollDelta.y)
   )
