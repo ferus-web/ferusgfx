@@ -61,7 +61,7 @@ proc newTextNode*(
   pos: Vec2,
   size: Vec2,
   fontMgr: FontManager
-) =
+): TextNode {.inline.} =
   when defined(ferusgfxDrawDamagedRegions):
     var paint = newPaint(SolidPaint)
     paint.opacity = 0.5f
