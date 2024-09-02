@@ -11,6 +11,7 @@ type
 
   FontManager* = ref object
     fonts: TableRef[string, Font]
+    typefaces: TableRef[string, Typeface]
     paths: TableRef[string, string]
 
 proc get*(fontMgr: FontManager, name: string): Font {.inline.} =
@@ -21,14 +22,35 @@ proc get*(fontMgr: FontManager, name: string): Font {.inline.} =
     raise newException(ValueError, "Could not find font '" & name & "'")
 
 proc set*(
-    fontMgr: FontManager, name: string, font: Font, path: string = ""
+  fontMgr: FontManager, name: string, font: Font, path: string = ""
 ) {.inline.} =
   if path.len > 1:
     fontMgr.paths[name] = path
+
   fontMgr.fonts[name] = font
+
+proc setTypeface*(
+  fontMgr: FontManager, name: string, typeface: Typeface, path: string = ""
+) {.inline.} =
+  if path.len > 1:
+    fontMgr.paths[name] = path
+
+  fontMgr.typefaces[name] = typeface
+
+proc getTypeface*(
+  fontMgr: FontManager, name: string
+): Typeface {.inline.} =
+  if name in fontMgr.fonts:
+    return fontMgr.typefaces[name]
+  
+  when not defined(ferusInJail):
+    raise newException(ValueError, "Could not find typeface '" & name & "'")
 
 proc load*(fontMgr: FontManager, name, path: string) {.inline.} =
   fontMgr.set(name, readFont(path), path)
+
+proc loadTypeface*(fontMgr: FontManager, name, path: string) {.inline.} =
+  fontMgr.setTypeface(name, readTypeface(path), path)
 
 proc getPath*(fontMgr: FontManager, name: string): string {.inline.} =
   fontMgr.paths[name]
@@ -114,4 +136,4 @@ proc getDefaultsFromGtkrc*(fontMgr: FontManager): Option[SystemAppearance] =
 #proc loadSystemFonts*(fontMgr: FontManager)
 
 proc newFontManager*(): FontManager {.inline.} =
-  FontManager(fonts: newTable[string, Font](), paths: newTable[string, string]())
+  FontManager(fonts: newTable[string, Font](), paths: newTable[string, string](), typefaces: newTable[string, Typeface]())
