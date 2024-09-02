@@ -1,6 +1,6 @@
 # Package
 
-version       = "1.0.23"
+version       = "1.1"
 author        = "xTrayambak"
 description   = "High performance graphics pipeline for Ferus"
 license       = "MIT"
@@ -15,6 +15,11 @@ requires "vmath >= 1.1.4"
 requires "pixie >= 5.0.6"
 requires "boxy >= 0.4.2"
 requires "opengl >= 1.2.9"
+requires "glfw >= 3.4.0.4"
+requires "weave >= 0.4.10"
+
+when defined(linux):
+  requires "iniplus >= 0.2.2"
 
 taskRequires "fmt", "nph >= 0.5.1"
 

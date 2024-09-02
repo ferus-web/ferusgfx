@@ -1,6 +1,12 @@
 # requires: windy, lorem, colored_logger
 import std/[logging, options, random]
-import windy, lorem, colored_logger, opengl, ../src/ferusgfx
+import lorem, colored_logger, opengl, weave, ../src/ferusgfx
+
+when defined(compositorUseWindy):
+  import windy
+else:
+  import glfw
+  import std/unicode
 
 const
   WIDTH = 1280
@@ -9,8 +15,17 @@ const
 proc main {.inline.} =
   let logger = newColoredLogger()
   addHandler logger
-  let window = newWindow("ferusgfx example compositor", ivec2(WIDTH, HEIGHT))
-  window.makeContextCurrent()
+
+  when defined(compositorUseWindy):
+    let window = newWindow("ferusgfx example compositor - windy backend", ivec2(WIDTH, HEIGHT))
+    window.makeContextCurrent()
+  else:
+    glfw.initialize()
+
+    var c = DefaultOpenglWindowConfig
+    c.title = "ferusgfx example compositor - glfw backend"
+    
+    var window = newWindow(c)
 
   loadExtensions()
 
@@ -19,17 +34,30 @@ proc main {.inline.} =
     vec2(0, -300),
     vec2(0, 256 * 18)
   )
+  
+  when defined(compositorUseWindy):
+    window.onResize = proc =
+      scene.onResize((w: window.size.x.int, h: window.size.y.int))
 
-  window.onResize = proc() =
-    scene.onResize((w: window.size.x.int, h: window.size.y.int))
+    window.onScroll = proc =
+      let delta = vec2(window.scrollDelta.x, window.scrollDelta.y)
+      scene.onScroll(delta)
 
-  window.onScroll = proc() =
-    let delta = vec2(window.scrollDelta.x, window.scrollDelta.y)
-    scene.onScroll(delta)
+    window.onRune = proc(rune: Rune) =
+      if rune.char == 'r':
+        scene.fullDamage()
+  else:
+    window.windowSizeCb = proc(w: Window, size: tuple[w, h: int32]) =
+      scene.onResize((w: size.w.int, h: size.h.int))
 
-  window.onRune = proc(rune: Rune) =
-    if rune.char == 'r':
-      scene.fullDamage()
+    window.scrollCb = proc(w: Window, offset: tuple[x, y: float64]) =
+      scene.onScroll(
+        vec2(offset.x, offset.y)
+      )
+
+    window.charCb = proc(window: Window, codepoint: Rune) =
+      if codepoint.toUTF8() == "r":
+        scene.fullDamage()
 
   # Load a font
   scene.fontManager.load("Default", "tests/IBMPlexSans-Regular.ttf")
@@ -54,11 +82,22 @@ proc main {.inline.} =
   )
 
   displayList.commit()
-  while not window.closeRequested:
-    scene.draw()
-    window.swapBuffers()
+
+  when defined(compositorUseWindy):
+    while not window.closeRequested:
+      scene.draw()
+      window.swapBuffers()
     
-    pollEvents()
+      pollEvents()
+  else:
+    while not window.shouldClose:
+      scene.draw()
+
+      glfw.swapBuffers(window)
+      glfw.pollEvents()
+
+    window.destroy()
+    glfw.terminate()
 
 when isMainModule:
   main()

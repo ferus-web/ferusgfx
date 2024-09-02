@@ -106,5 +106,6 @@ proc needsRedraw*(drawable: Drawable): bool {.inline.} =
   )
  )]#
 
-method draw*(drawable: Drawable, image: var Image, dt: float32) {.base.} = discard
-method upload*(drawable: Drawable, images: var seq[Image], dt: float32) {.base.} = discard
+method update*(drawable: Drawable, dt: float32) {.base.} = discard
+method draw*(drawable: Drawable, image: ptr Image, dt: float32) {.base.} = discard
+method upload*(drawable: Drawable, images: ptr seq[Image], dt: float32) {.base.} = discard

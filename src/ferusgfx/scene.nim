@@ -4,13 +4,24 @@
 ## This code is licensed under the MIT license
 ##
 
-import std/[options, times, logging]
-import pixie, boxy, opengl
+import std/[options, times, logging, strutils]
+import pixie, boxy, opengl, weave
 import ./[fontmgr, drawable, camera, events, gifnode, imagenode, textnode]
+
+# Since we've imported this, pass everything needed for this to compile.
+{.passC: "-march=native -mtune=native -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mpclmul -mavx -mavx2".}
 
 type
   OpenGLData* = object
     version*, vendor*, device*: string
+
+  DraggingState* = object
+    startDrag*: Vec2
+    endDrag*: Option[Vec2]
+
+  CursorState* = object
+    currentPosition*: Vec2
+    drag*: Option[DraggingState]
 
   Scene* = object
     bxContext*: Boxy
@@ -23,9 +34,11 @@ type
 
     minimized: bool
     maximized: bool
-    openglData*: OpenGLData
 
+    openglData*: OpenGLData
     lastTime: float
+
+    cursor*: CursorState
 
 proc getDt*(scene: Scene): float {.inline.} =
   let time = epochTime() - scene.lastTime
@@ -37,15 +50,22 @@ proc onResize*(scene: var Scene, nDimensions: tuple[w, h: int]) {.inline.} =
 
   scene.camera.calculateFrustum((width: nDimensions.w.float32, height: nDimensions.h.float32))
 
-  #[
-  var pScene: ptr Scene = addr scene
-
-  scene.eventManager.add(
-    (age: uint) => pScene[].tree[age].markRedraw(),
-    scene.tree.len.uint,
-    @[tag 0], true
+proc beginSelection*(scene: var Scene) =
+  info "scene: begin selection/drag"
+  scene.cursor.drag = some(
+    DraggingState(
+      startDrag: scene.cursor.currentPosition
+    )
   )
-  ]#
+
+proc endSelection*(scene: var Scene) =
+  if scene.cursor.drag.isSome:
+    # we're selecting/dragging
+    info "scene: stop selection/dragging"
+    var state = scene.cursor.drag.get()
+    state.endDrag = scene.cursor.currentPosition.some()
+
+    scene.cursor.drag = move(state).some()
 
 proc onMinimize*(scene: var Scene) {.inline.} =
   if scene.minimized:
@@ -56,6 +76,7 @@ proc onMinimize*(scene: var Scene) {.inline.} =
 
 proc onScroll*(scene: var Scene, delta: Vec2) {.inline.} =
   scene.camera.scroll(delta)
+  scene.camera.calculateFrustum((width: scene.background.width.float32, height: scene.background.height.float32))
 
 proc get*(scene: Scene, id: int): Option[Drawable] {.inline.} =
   if id < (scene.tree.len - 1):
@@ -78,7 +99,7 @@ proc onMaximize*(scene: var Scene) {.inline.} =
   scene.minimized = false
 
 proc fullDamage*(scene: var Scene) {.inline.} =
-  when not defined(ferusInJail): debug "Performing full damage on scene; marking all drawables as needing a redraw. This will tank the performance!"
+  when not defined(ferusInJail): debug "scene: performing full damage on scene; marking all drawables as needing a redraw. This will tank the performance!"
   for i, _ in scene.tree:
     var drawObj = scene.tree[i]
     drawObj.markRedraw(true)
@@ -87,11 +108,10 @@ proc blit*(scene: var Scene) {.inline.} =
   scene.bxContext.drawImage("background", vec2(0, 0))
 
   for i, drawObj in scene.tree:
-    if scene.camera.isCulled(drawObj.position):
+    if scene.camera.isCulled(drawObj.bounds):
       continue
 
     let id = $i
-
     var multidraw: seq[int]
 
     when defined(ferusgfxDrawDamagedRegions):
@@ -100,12 +120,19 @@ proc blit*(scene: var Scene) {.inline.} =
     if drawObj.needsRedraw():
       when defined(ferusgfxDrawDamagedRegions):
         drawDamageRegion = true
+
       var 
-        img = newImage(drawObj.bounds.w.int, drawObj.bounds.h.int)
-        uploaded: seq[Image]
+        img: Image
+        uploaded = newSeq[Image]()
       
-      drawObj.draw(img, scene.getDt())
-      drawObj.upload(uploaded, scene.getDt())
+      when not defined(ferusgfxUseSinglethreadedRenderer):
+        init(Weave)
+        spawn drawObj.draw(addr img, scene.getDt())
+        spawn drawObj.upload(addr uploaded, scene.getDt())
+        exit(Weave)
+      else:
+        drawObj.draw(addr img, scene.getDt())
+        drawObj.upload(addr uploaded, scene.getDt())
 
       when defined(ferusgfxDrawDamagedRegions):
         scene.bxContext.addImage(id & "-dmg", drawObj.damageImage)
@@ -137,6 +164,15 @@ proc draw*(scene: var Scene) =
     ivec2(scene.background.width.int32, scene.background.height.int32)
   )
   scene.camera.update()
+  
+  if scene.cursor.drag.isSome:
+    let dragState = scene.cursor.drag.get()
+    if dragState.endDrag.isSome:
+      debug "scene: assigning DraggingState as none"
+      scene.cursor.drag = none(DraggingState)
+
+    debug "scene: selection in progress (start=$1, current=$2)" % [$dragState.startDrag, $scene.cursor.currentPosition]
+
   scene.eventManager.poll()
   scene.blit()
   scene.bxContext.endFrame()
@@ -153,12 +189,12 @@ proc newScene*(width, height: int): Scene =
     extensions = $cast[cstring](glGetString(GL_EXTENSIONS))
   
   when not defined(ferusInJail):
-    info "New ferusgfx scene instantiating."
-    info "OpenGL: " & version
-    info "Renderer: " & renderer
-    info "Vendor: " & vendor
-    info "Extensions: " & extensions
-    info "Viewport: " & $width & 'x' & $height
+    info "scene: new ferusgfx scene instantiating."
+    info "scene: OpenGL: " & version
+    info "scene: device: " & renderer
+    info "scene: vendor: " & vendor
+    info "scene: extensions: " & extensions
+    info "scene: viewport: " & $width & 'x' & $height
 
   result = Scene(
     bxContext: newBoxy(),

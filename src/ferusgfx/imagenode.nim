@@ -1,12 +1,13 @@
-import drawable, pixie, boxy
+import ferusgfx/drawable
+import pixie, boxy
 
 type ImageNode* = ref object of Drawable
   path*: string
   image*: Image
 
-method draw*(node: ImageNode, src: var Image, dt: float32) =
+method draw*(node: ImageNode, src: ptr Image, dt: float32) =
   node.markRedraw(false)
-  `=copy`(src, node.image)
+  `=copy`(src[], node.image)
 
 proc newImageNodeFromMemory*(content: string, pos: Vec2): ImageNode {.inline.} =
   let image = decodeImage content

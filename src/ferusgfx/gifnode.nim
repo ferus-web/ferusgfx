@@ -1,5 +1,8 @@
 import std/times
-import drawable, pixie, pixie/fileformats/gif, boxy
+import ferusgfx/drawable
+import pixie,
+       pixie/fileformats/gif, 
+       boxy
 
 type GIFNode* = ref object of Drawable
   path*: string
@@ -20,7 +23,7 @@ proc toggle*(node: GIFNode) {.inline.} =
 proc pause*(node: GIFNode, value: bool) {.inline.} =
   node.paused = value
 
-method upload*(node: GIFNode, src: var seq[Image], dt: float32) =
+method upload*(node: GIFNode, src: ptr seq[Image], dt: float32) =
   if node.firstRun:
     node.firstRun = false
     node.prevFrame = epochTime()
@@ -35,15 +38,29 @@ method upload*(node: GIFNode, src: var seq[Image], dt: float32) =
   if node.timer < node.gif.duration:
     var intervalSum: float32
 
-    for i in 0 ..< node.gif.frames.len:
-      src.add(node.gif.frames[i])
-      intervalSum += node.gif.intervals[i]
+    when defined(ferusgfxGifRenderingConservativeAlgo) or not defined(ferusgfxGifRenderingLiberalAlgo):
+      # "Conservative" GIF rendering algorithm - minimizes useless memory copies at the cost of visual artifacting, drastically increasing performance and reducing GC spikes.
+      var thisFrame = node.gif.frames[0]
 
-      if intervalSum > node.timer:
-        break
+      for i in 0 ..< node.gif.frames.len:
+        if intervalSum > node.timer:
+          break
+        else:
+          thisFrame = node.gif.frames[i]
+          intervalSum += node.gif.intervals[i]
+
+      src[].add thisFrame
+    elif defined(ferusgfxGifRenderingLiberalAlgo):
+      # "Liberal" GIF rendering algorithm - makes sure no visual artifacting occurs at the cost of increased memory usage and higher amounts of GC spikes
+      for i in 0 ..< node.gif.frames.len:
+        src[].add(node.gif.frames[i])
+        intervalSum += node.gif.intervals[i]
+
+        if intervalSum > node.timer:
+          break
   else:
     node.timer = 0f
-    src.add(node.gif.frames[0])
+    src[].add(node.gif.frames[0])
 
 proc newGIFNodeFromMemory*(content: string, pos: Vec2): GIFNode {.inline.} =
   let
