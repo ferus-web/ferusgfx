@@ -8,7 +8,6 @@ type TextNode* = ref object of Drawable
   imageSpace: Mat3
 
   font: Font
-
   wrap: bool
 
 proc compute*(textNode: var TextNode) =
@@ -33,7 +32,8 @@ proc computeSize(textContent: string, font: Font): Vec2 =
   vec2(width.float32, height.float32)
 
 proc newTextNode*(
-    textContent: sink string, pos: Vec2, fontMgr: FontManager
+    textContent: sink string, pos: Vec2, fontMgr: FontManager,
+    fontSize: float32 = 14f
 ): TextNode {.inline.} =
   let size = computeSize(textContent, fontMgr.get("Default"))
   
@@ -41,11 +41,13 @@ proc newTextNode*(
     var paint = newPaint(SolidPaint)
     paint.opacity = 0.5f
     paint.color = color(1, 0, 0, 0.5)
-
+  
+  var font = fontMgr.get("Default")
+  font.size = fontSize
   result = TextNode(
     textContent: move(textContent),
     position: pos,
-    font: fontMgr.get("Default"),
+    font: font,
     bounds: rect(pos.x, pos.y, size.x, size.y),
     config: (needsRedraw: true)
   )
@@ -66,11 +68,13 @@ proc newTextNode*(
     var paint = newPaint(SolidPaint)
     paint.opacity = 0.5f
     paint.color = color(1, 0, 0, 0.5)
+  
+  var font = fontMgr.get("Default")
 
   result = TextNode(
     textContent: move(textContent),
     position: pos,
-    font: fontMgr.get("Default"),
+    font: font,
     bounds: rect(pos.x, pos.y, size.x, size.y),
     config: (needsRedraw: true)
   )
@@ -78,5 +82,36 @@ proc newTextNode*(
   when defined(ferusgfxDrawDamagedRegions):
     result.damageImage = newImage(result.bounds.w.int32, result.bounds.y.int32)
     result.damageImage.fill(paint)
+
+  compute result
+
+proc newTextNode*(
+  textContent: sink string,
+  pos, size: Vec2,
+  typeface: Typeface,
+  fontSize: float32 = 14f,
+  color: Color = color(0, 0, 0, 1)
+): TextNode {.inline.} =
+  when defined(ferusgfxDrawDamagedRegions):
+    var paint = newPaint(SolidPaint)
+    paint.opacity = 0.5f
+    paint.color = color(1, 0, 0, 0.5)
+
+  var font = newFont(typeface)
+  font.size = fontSize
+  font.paint.color = color
+
+  result = TextNode(
+    textContent: move(textContent),
+    position: pos,
+    font: font,
+    bounds: rect(pos.x, pos.y, size.x, size.y),
+    config: (needsRedraw: true)
+  )
+
+  when defined(ferusgfxDrawDamagedRegions):
+    var paint = newPaint(SolidPaint)
+    paint.opacity = 0.5f
+    paint.color = color(1, 0, 0, 0.5)
 
   compute result
