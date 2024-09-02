@@ -19,10 +19,10 @@ proc compute*(textNode: var TextNode) =
   textNode.imageSpace = translate(-textNode.globalBounds.xy) * transform
 
 method draw*(textNode: TextNode, image: ptr Image, dt: float32) =
-  assert image != nil
-  #textNode.drawAABB(context)
+  image[] = newImage(textNode.bounds.w.int, textNode.bounds.h.int)
   image[].fill(rgba(255, 255, 255, 1))
   image[].fillText(textNode.arrangement, textNode.imageSpace)
+
   textNode.markRedraw(false)
 
 proc computeSize(textContent: string, font: Font): Vec2 =
@@ -37,6 +37,31 @@ proc newTextNode*(
 ): TextNode {.inline.} =
   let size = computeSize(textContent, fontMgr.get("Default"))
   
+  when defined(ferusgfxDrawDamagedRegions):
+    var paint = newPaint(SolidPaint)
+    paint.opacity = 0.5f
+    paint.color = color(1, 0, 0, 0.5)
+
+  result = TextNode(
+    textContent: move(textContent),
+    position: pos,
+    font: fontMgr.get("Default"),
+    bounds: rect(pos.x, pos.y, size.x, size.y),
+    config: (needsRedraw: true)
+  )
+
+  when defined(ferusgfxDrawDamagedRegions):
+    result.damageImage = newImage(result.bounds.w.int32, result.bounds.y.int32)
+    result.damageImage.fill(paint)
+
+  compute result
+
+proc newTextNode*(
+  textContent: sink string,
+  pos: Vec2,
+  size: Vec2,
+  fontMgr: FontManager
+) =
   when defined(ferusgfxDrawDamagedRegions):
     var paint = newPaint(SolidPaint)
     paint.opacity = 0.5f

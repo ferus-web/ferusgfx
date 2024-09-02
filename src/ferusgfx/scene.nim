@@ -4,7 +4,7 @@
 ## This code is licensed under the MIT license
 ##
 
-import std/[options, times, logging]
+import std/[options, times, logging, strutils]
 import pixie, boxy, opengl, weave
 import ./[fontmgr, drawable, camera, events, gifnode, imagenode, textnode]
 
@@ -14,6 +14,14 @@ import ./[fontmgr, drawable, camera, events, gifnode, imagenode, textnode]
 type
   OpenGLData* = object
     version*, vendor*, device*: string
+
+  DraggingState* = object
+    startDrag*: Vec2
+    endDrag*: Option[Vec2]
+
+  CursorState* = object
+    currentPosition*: Vec2
+    drag*: Option[DraggingState]
 
   Scene* = object
     bxContext*: Boxy
@@ -26,8 +34,11 @@ type
 
     minimized: bool
     maximized: bool
+
     openglData*: OpenGLData
     lastTime: float
+
+    cursor*: CursorState
 
 proc getDt*(scene: Scene): float {.inline.} =
   let time = epochTime() - scene.lastTime
@@ -38,6 +49,23 @@ proc onResize*(scene: var Scene, nDimensions: tuple[w, h: int]) {.inline.} =
   scene.background.fill(rgba(255, 255, 255, 255))
 
   scene.camera.calculateFrustum((width: nDimensions.w.float32, height: nDimensions.h.float32))
+
+proc beginSelection*(scene: var Scene) =
+  info "scene: begin selection/drag"
+  scene.cursor.drag = some(
+    DraggingState(
+      startDrag: scene.cursor.currentPosition
+    )
+  )
+
+proc endSelection*(scene: var Scene) =
+  if scene.cursor.drag.isSome:
+    # we're selecting/dragging
+    info "scene: stop selection/dragging"
+    var state = scene.cursor.drag.get()
+    state.endDrag = scene.cursor.currentPosition.some()
+
+    scene.cursor.drag = move(state).some()
 
 proc onMinimize*(scene: var Scene) {.inline.} =
   if scene.minimized:
@@ -71,7 +99,7 @@ proc onMaximize*(scene: var Scene) {.inline.} =
   scene.minimized = false
 
 proc fullDamage*(scene: var Scene) {.inline.} =
-  when not defined(ferusInJail): debug "Performing full damage on scene; marking all drawables as needing a redraw. This will tank the performance!"
+  when not defined(ferusInJail): debug "scene: performing full damage on scene; marking all drawables as needing a redraw. This will tank the performance!"
   for i, _ in scene.tree:
     var drawObj = scene.tree[i]
     drawObj.markRedraw(true)
@@ -84,7 +112,6 @@ proc blit*(scene: var Scene) {.inline.} =
       continue
 
     let id = $i
-
     var multidraw: seq[int]
 
     when defined(ferusgfxDrawDamagedRegions):
@@ -95,8 +122,8 @@ proc blit*(scene: var Scene) {.inline.} =
         drawDamageRegion = true
 
       var 
-        img = newImage(drawObj.bounds.w.int, drawObj.bounds.h.int)
-        uploaded: seq[Image]
+        img: Image
+        uploaded = newSeq[Image]()
       
       when not defined(ferusgfxUseSinglethreadedRenderer):
         init(Weave)
@@ -137,6 +164,15 @@ proc draw*(scene: var Scene) =
     ivec2(scene.background.width.int32, scene.background.height.int32)
   )
   scene.camera.update()
+  
+  if scene.cursor.drag.isSome:
+    let dragState = scene.cursor.drag.get()
+    if dragState.endDrag.isSome:
+      debug "scene: assigning DraggingState as none"
+      scene.cursor.drag = none(DraggingState)
+
+    debug "scene: selection in progress (start=$1, current=$2)" % [$dragState.startDrag, $scene.cursor.currentPosition]
+
   scene.eventManager.poll()
   scene.blit()
   scene.bxContext.endFrame()
@@ -153,12 +189,12 @@ proc newScene*(width, height: int): Scene =
     extensions = $cast[cstring](glGetString(GL_EXTENSIONS))
   
   when not defined(ferusInJail):
-    info "New ferusgfx scene instantiating."
-    info "OpenGL: " & version
-    info "Renderer: " & renderer
-    info "Vendor: " & vendor
-    info "Extensions: " & extensions
-    info "Viewport: " & $width & 'x' & $height
+    info "scene: new ferusgfx scene instantiating."
+    info "scene: OpenGL: " & version
+    info "scene: device: " & renderer
+    info "scene: vendor: " & vendor
+    info "scene: extensions: " & extensions
+    info "scene: viewport: " & $width & 'x' & $height
 
   result = Scene(
     bxContext: newBoxy(),

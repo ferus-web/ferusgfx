@@ -2,6 +2,8 @@ import std/[options, logging]
 import ferusgfx/drawable
 import ffmpeg
 
+{.error: "ferusgfx's VideoNode does not work as intended yet - do not import it!".}
+
 type
   CodecInfo* = (ptr AVCodecParameters, ptr AVCodec, int)
   
@@ -88,8 +90,8 @@ proc newVideoNode*(file: string): VideoNode =
   if videoIndex == -1:
     raise newException(InvalidStreamError, "Couldn't find video stream for file: " & file)
 
-  info "Video stream resolution: " & $node.videoInfo[0][].width & 'x' & $node.videoInfo[0][].height
-  info "Video target FPS: " & $targetFps
+  info "video: tream resolution: " & $node.videoInfo[0][].width & 'x' & $node.videoInfo[0][].height
+  info "video: target FPS: " & $targetFps
 
   if node.videoInfo[1] == nil:
     raise newException(MissingCodecInfo, "Cannot find codec for file: " & file)
@@ -97,8 +99,8 @@ proc newVideoNode*(file: string): VideoNode =
   allocContext(node.codecCtx.addr, node.audioCtx.addr, node.videoInfo, node.audioInfo)
   let parser = av_parser_init(cint node.audioInfo[1].id)
 
-  info "Video pixel format: " & $node.codecCtx.pix_fmt
-  info "Video codec ID: " & $node.codecCtx.codec_id
+  info "video: pixel format: " & $node.codecCtx.pix_fmt
+  info "video: codec ID: " & $node.codecCtx.codec_id
 
   node.frame = av_frame_alloc()
   node.audioFrame = av_frame_alloc()

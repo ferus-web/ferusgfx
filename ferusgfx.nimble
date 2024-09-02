@@ -16,7 +16,6 @@ requires "pixie >= 5.0.6"
 requires "boxy >= 0.4.2"
 requires "opengl >= 1.2.9"
 requires "glfw >= 3.4.0.4"
-requires "https://github.com/mashingan/nimffmpeg >= 0.1.0"
 requires "weave >= 0.4.10"
 
 when defined(linux):
