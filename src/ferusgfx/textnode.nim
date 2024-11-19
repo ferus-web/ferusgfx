@@ -17,6 +17,9 @@ proc compute*(textNode: var TextNode) =
 
   textNode.imageSpace = translate(-textNode.globalBounds.xy) * transform
 
+method getNodeKind*(textNode: TextNode): DrawableKind {.inline.} =
+  dkTextNode
+
 method draw*(textNode: TextNode, image: ptr Image, dt: float32) =
   image[] = newImage(textNode.bounds.w.int, textNode.bounds.h.int)
   image[].fill(rgba(255, 255, 255, 1))
@@ -106,12 +109,13 @@ proc newTextNode*(
     position: pos,
     font: font,
     bounds: rect(pos.x, pos.y, size.x, size.y),
-    config: (needsRedraw: true)
+    config: (needsRedraw: true),
+    damageImage: newImage(1, 1)
   )
 
   when defined(ferusgfxDrawDamagedRegions):
-    var paint = newPaint(SolidPaint)
-    paint.opacity = 0.5f
-    paint.color = color(1, 0, 0, 0.5)
+    let paint2 = newPaint(SolidPaint)
+    paint2.opacity = 0.5f
+    paint2.color = color(1, 0, 0, 0.5)
 
   compute result

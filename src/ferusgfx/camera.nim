@@ -12,7 +12,7 @@ type
       ## very rigid. **Setting this to 0 will cause a crash due to how the delta is calculated!**
 
   Camera* = object ## A camera object.
-    position: Vec2
+    position*: Vec2
     opts: ScrollingOpts
     bounds*: Rect
 

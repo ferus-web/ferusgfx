@@ -14,6 +14,9 @@ type GIFNode* = ref object of Drawable
   paused: bool = false
   firstRun*: bool = true
 
+method getNodeKind*(gifNode: GIFNode): DrawableKind {.inline.} =
+  dkGIFNode
+
 proc pause*(node: GIFNode) {.inline.} =
   node.paused = true
 

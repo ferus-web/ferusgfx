@@ -5,6 +5,9 @@ type ImageNode* = ref object of Drawable
   path*: string
   image*: Image
 
+method getNodeKind*(gifNode: ImageNode): DrawableKind {.inline.} =
+  dkImageNode
+
 method draw*(node: ImageNode, src: ptr Image, dt: float32) =
   node.markRedraw(false)
   `=copy`(src[], node.image)

@@ -1,4 +1,4 @@
-# requires: windy, lorem, colored_logger
+# requires: windy/glfw, lorem, colored_logger
 import std/[logging, options, random]
 import lorem, colored_logger, opengl, weave, ../src/ferusgfx
 
@@ -50,10 +50,19 @@ proc main {.inline.} =
     window.windowSizeCb = proc(w: Window, size: tuple[w, h: int32]) =
       scene.onResize((w: size.w.int, h: size.h.int))
 
+    window.mouseButtonCb = proc(w: Window, b: MouseButton, pressed: bool, mods: set[ModifierKey]) =
+      if b == mbLeft:
+        scene.onCursorClick(pressed, MouseClick.Left)
+      elif b == mbRight:
+        scene.onCursorClick(pressed, MouseClick.Right)
+
     window.scrollCb = proc(w: Window, offset: tuple[x, y: float64]) =
       scene.onScroll(
         vec2(offset.x, offset.y)
       )
+
+    window.cursorPositionCb = proc(w: Window, pos: tuple[x, y: float64]) =
+      scene.onCursorMotion(vec2(pos.x, pos.y))
 
     window.charCb = proc(window: Window, codepoint: Rune) =
       if codepoint.toUTF8() == "r":
@@ -68,11 +77,27 @@ proc main {.inline.} =
   
   randomize()
   for y in 0 .. 256:
-    let content = sentence()
+    var pY = addr y
+    let content = $pY[]
     baseY += 16
-    displayList.add(
-      newTextNode(content, vec2(100f, baseY), scene.fontManager)
-    )
+    let text = newTextNode(content, vec2(100f, baseY), scene.fontManager)
+
+    displayList &=
+      text
+
+    displayList &=
+      newTouchInterestNode(
+        text.bounds,
+        clickCb = (proc(button: MouseClick) =
+          echo "click: " & $pY[]
+          echo "button: " & $button
+          echo "click at " & $text.position
+        ),
+        hoverCb = (proc() =
+          echo "hover: " & $pY[]
+          echo "hover at " & $text.position
+        )
+      )
   
   displayList.add(
     newGIFNode(

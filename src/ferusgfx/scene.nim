@@ -1,17 +1,15 @@
-##
 ## A 2D scene
 ##
-## This code is licensed under the MIT license
-##
+## Copyright (C) 2024 Trayambak Rai and Ferus Authors
 
 import std/[options, times, logging, strutils]
 import pixie, boxy, opengl, weave
-import ./[fontmgr, drawable, camera, events, gifnode, imagenode, textnode]
+import ./[fontmgr, drawable, camera, events, gifnode, imagenode, textnode, touchnode]
 
 # Since we've imported this, pass everything needed for this to compile.
 {.passC: "-march=native -mtune=native -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mpclmul -mavx -mavx2".}
 
-type
+type 
   OpenGLData* = object
     version*, vendor*, device*: string
 
@@ -38,11 +36,56 @@ type
     openglData*: OpenGLData
     lastTime: float
 
+    backgroundColor*: ColorRGBA
+
     cursor*: CursorState
 
 proc getDt*(scene: Scene): float {.inline.} =
   let time = epochTime() - scene.lastTime
   time
+
+proc setBackgroundColor*(scene: var Scene, color: ColorRGBA) {.inline.} =
+  scene.backgroundColor = color
+  scene.background.fill(color)
+
+proc onCursorMotion*(scene: var Scene, position: sink Vec2) =
+  scene.cursor.currentPosition = move(position)
+  let relativeCursorPos = scene.camera.position + scene.cursor.currentPosition # scene.camera.apply(scene.cursor.currentPosition)
+
+  # should we just do this alongside the draw iteration?
+  for i, _ in scene.tree:
+    if scene.tree[i].getNodeKind() == dkTouchInterestNode:
+      var interest = TouchInterestNode(scene.tree[i])
+      if interest.hovered:
+        interest.hovered = false
+        interest.markRedraw(true)
+      
+      if relativeCursorPos.overlaps(interest.bounds):
+        interest.hovered = true
+        interest.markRedraw(true)
+
+        if interest.hoverCb != nil:
+          interest.hoverCb()
+
+      scene.tree[i] = move(interest)
+
+proc onCursorClick*(scene: var Scene, pressed: bool, button: MouseClick) =
+  let relativeCursorPos = scene.camera.position + scene.cursor.currentPosition # scene.camera.apply(scene.cursor.currentPosition)
+  for i, _ in scene.tree:
+    if scene.tree[i].getNodeKind() == dkTouchInterestNode:
+      var interest = TouchInterestNode(scene.tree[i])
+      if interest.pressed:
+        interest.pressed = false
+        interest.markRedraw(true)
+
+      if relativeCursorPos.overlaps(interest.bounds):
+        interest.pressed = pressed
+        interest.markRedraw(true)
+
+        if interest.hoverCb != nil:
+          interest.clickCb(button)
+
+      scene.tree[i] = move(interest)
 
 proc onResize*(scene: var Scene, nDimensions: tuple[w, h: int]) {.inline.} =
   scene.background = newImage(nDimensions.w, nDimensions.h)
@@ -123,7 +166,7 @@ proc blit*(scene: var Scene) {.inline.} =
 
       var 
         img: Image
-        uploaded = newSeq[Image]()
+        uploaded = newSeq[Image](0)
       
       when not defined(ferusgfxUseSinglethreadedRenderer):
         init(Weave)
@@ -135,23 +178,28 @@ proc blit*(scene: var Scene) {.inline.} =
         drawObj.upload(addr uploaded, scene.getDt())
 
       when defined(ferusgfxDrawDamagedRegions):
-        scene.bxContext.addImage(id & "-dmg", drawObj.damageImage)
-
+        if drawObj.damageImage != nil:
+          scene.bxContext.addImage(id & "-dmg", drawObj.damageImage)
+      
       if uploaded.len < 1:
-        scene.bxContext.addImage(id, img)
+        if img != nil:
+          scene.bxContext.addImage(id, img)
+        else:
+          continue
       else:
         for iu, imgu in uploaded:
           scene.bxContext.addImage(id & '-' & $iu, imgu)
           multidraw.add(iu)
     
     if multidraw.len < 1:
-      scene.bxContext.drawImage(id, scene.camera.apply(drawObj.position))
+      if scene.bxContext.contains(id):
+        scene.bxContext.drawImage(id, scene.camera.apply(drawObj.position))
     else:
       for mid in multidraw:
         scene.bxContext.drawImage(id & '-' & $mid, scene.camera.apply(drawObj.position))
     
     when defined(ferusgfxDrawDamagedRegions):
-      if drawDamageRegion:
+      if drawDamageRegion and scene.bxContext.contains(id & "-dmg"):
         scene.bxContext.drawImage(id & "-dmg", scene.camera.apply(drawObj.position))
 
 proc draw*(scene: var Scene) =

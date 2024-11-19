@@ -4,14 +4,25 @@
 
 import pixie, bumpy, boxy
 
+type
+  DrawableKind* = enum
+    dkDrawable
+    dkTextNode
+    dkImageNode
+    dkGIFNode
+    dkTouchInterestNode
+
 type Drawable* = ref object of RootObj
   id*: uint
   position*: Vec2
   bounds*: Rect
-  config*: tuple[needsRedraw: bool]
+  config*: tuple[needsRedraw: bool] = (needsRedraw: true)
   
   when defined(ferusgfxDrawDamagedRegions):
     damageImage*: Image
+
+method getNodeKind*(drawable: Drawable): DrawableKind {.inline, base.} =
+  dkDrawable
 
 #[proc `=copy`*(dest: var Drawable, src: Drawable) =
   `=destroy`(dest)
