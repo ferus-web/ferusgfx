@@ -62,7 +62,7 @@ proc onCursorMotion*(scene: var Scene, position: sink Vec2) =
         interest.markRedraw(true)
 
         if interest.hoverCb != nil:
-          interest.hoverCb()
+          interest.hoverCb(interest.tags)
 
       scene.tree[i] = move(interest)
 
@@ -80,7 +80,7 @@ proc onCursorClick*(scene: var Scene, pressed: bool, button: MouseClick) =
         interest.markRedraw(true)
 
         if interest.hoverCb != nil:
-          interest.clickCb(button)
+          interest.clickCb(interest.tags, button)
 
       scene.tree[i] = move(interest)
 

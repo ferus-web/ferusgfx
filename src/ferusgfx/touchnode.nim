@@ -8,11 +8,13 @@ type
     Left
     Right
 
-  TouchInterestClick* = proc(mouse: MouseClick)
-  TouchInterestHover* = proc()
+  TouchInterestClick* = proc(tags: seq[string], mouse: MouseClick)
+  TouchInterestHover* = proc(tags: seq[string])
   TouchInterestNode* = ref object of Drawable
     clickCb*: TouchInterestClick
     hoverCb*: TouchInterestHover
+
+    tags*: seq[string]
 
     hovered*: bool = false
     pressed*: bool = false
@@ -41,12 +43,14 @@ method draw*(node: TouchInterestNode, image: ptr Image, dt: float32) =
 
 proc newTouchInterestNode*(
   bounds: Rect,
-  clickCb: TouchInterestClick, hoverCb: TouchInterestHover
+  clickCb: TouchInterestClick, hoverCb: TouchInterestHover,
+  tags: seq[string] = @[]
 ): TouchInterestNode {.inline.} =
   TouchInterestNode(
     bounds: bounds,
     position: vec2(bounds.x, bounds.y),
     clickCb: clickCb,
     hoverCb: hoverCb,
+    tags: tags,
     config: (needsRedraw: true)
   )

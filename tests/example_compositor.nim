@@ -88,12 +88,12 @@ proc main {.inline.} =
     displayList &=
       newTouchInterestNode(
         text.bounds,
-        clickCb = (proc(button: MouseClick) =
+        clickCb = (proc(tags: seq[string], button: MouseClick) =
           echo "click: " & $pY[]
           echo "button: " & $button
           echo "click at " & $text.position
         ),
-        hoverCb = (proc() =
+        hoverCb = (proc(tags: seq[string]) =
           echo "hover: " & $pY[]
           echo "hover at " & $text.position
         )
