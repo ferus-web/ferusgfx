@@ -35,6 +35,9 @@ type
 
     openglData*: OpenGLData
     lastTime: float
+    
+    backgroundColor*: ColorRGBA
+    redrawBackground: bool = false
 
     backgroundColor*: ColorRGBA
 
@@ -89,9 +92,13 @@ proc onCursorClick*(scene: var Scene, pressed: bool, button: MouseClick) =
 
 proc onResize*(scene: var Scene, nDimensions: tuple[w, h: int]) {.inline.} =
   scene.background = newImage(nDimensions.w, nDimensions.h)
-  scene.background.fill(rgba(255, 255, 255, 255))
+  scene.background.fill(scene.backgroundColor)
 
   scene.camera.calculateFrustum((width: nDimensions.w.float32, height: nDimensions.h.float32))
+
+proc setBackgroundColor*(scene: var Scene, color: ColorRGBA) {.inline.} =
+  scene.backgroundColor = color
+  scene.background.fill(color)
 
 proc beginSelection*(scene: var Scene) =
   info "scene: begin selection/drag"
@@ -260,6 +267,7 @@ proc newScene*(width, height: int): Scene =
   )
   var bg = newImage(width, height)
   bg.fill(rgba(255, 255, 255, 255))
+  result.backgroundColor = rgba(255, 255, 255, 255)
 
   result.background = bg
   result.bxContext.addImage("background", bg)

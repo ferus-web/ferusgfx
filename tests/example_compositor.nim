@@ -1,6 +1,6 @@
 # requires: windy/glfw, lorem, colored_logger
 import std/[logging, options, random]
-import lorem, colored_logger, opengl, weave, ../src/ferusgfx
+import lorem, colored_logger, chroma, opengl, weave, ../src/ferusgfx
 
 when defined(compositorUseWindy):
   import windy
