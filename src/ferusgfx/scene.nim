@@ -39,17 +39,11 @@ type
     backgroundColor*: ColorRGBA
     redrawBackground: bool = false
 
-    backgroundColor*: ColorRGBA
-
     cursor*: CursorState
 
 proc getDt*(scene: Scene): float {.inline.} =
   let time = epochTime() - scene.lastTime
   time
-
-proc setBackgroundColor*(scene: var Scene, color: ColorRGBA) {.inline.} =
-  scene.backgroundColor = color
-  scene.background.fill(color)
 
 proc onCursorMotion*(scene: var Scene, position: sink Vec2) =
   scene.cursor.currentPosition = move(position)
