@@ -1,10 +1,6 @@
 # Package
 
-<<<<<<< HEAD
 version       = "1.2"
-=======
-version       = "1.1.10"
->>>>>>> origin/main
 author        = "xTrayambak"
 description   = "High performance graphics pipeline for Ferus"
 license       = "MIT"
