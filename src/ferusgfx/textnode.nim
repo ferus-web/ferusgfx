@@ -109,9 +109,10 @@ proc newTextNode*(
     position: pos,
     font: font,
     bounds: rect(pos.x, pos.y, size.x, size.y),
-    config: (needsRedraw: true),
-    damageImage: newImage(1, 1)
+    config: (needsRedraw: true)
   )
+  when defined(ferusgfxDrawDamagedRegions):
+    result.damageImage = newImage(1, 1)
 
   when defined(ferusgfxDrawDamagedRegions):
     let paint2 = newPaint(SolidPaint)
