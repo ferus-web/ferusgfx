@@ -1,3 +1,5 @@
+**WARNING**: This package is deprecated. Do not use it! Use [boxy](https://github.com/treeform/boxy), [FigDraw](https://github.com/elcritch/FigDraw) or [NanoVG](https://github.com/johnnovak/nim-nanovg) instead!
+
 # ferusgfx - a high performance rendering engine
 ![ferusgfx's example compositor](https://github.com/ferus-web/ferusgfx/blob/1.0.0/media/example_compositor.jpg)
 
